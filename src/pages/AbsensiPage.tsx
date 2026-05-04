@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
-  CalendarCheck, Plus, Search, MoreHorizontal,
+  CalendarCheck, Search, MoreHorizontal,
   Pencil, Trash2, X, CheckCircle2, XCircle, Clock,
   AlertCircle, Calendar, Users, Image, StickyNote,
   Loader2
@@ -135,7 +135,6 @@ export default function AbsensiPage() {
     return matchSearch && matchStatus && matchClass
   })
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
 
   const openEdit = (a: Attendance) => {
     setEditTarget(a)

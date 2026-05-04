@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Users,
-  BookOpen,
   GraduationCap,
   Layers,
   ClipboardCheck,
@@ -78,11 +77,6 @@ const navMain = [
         title: "Tugas",
         url: "/dashboard/tugas",
         icon: FileText,
-      },
-      {
-        title: "Pelajaran",
-        url: "/dashboard/pelajaran",
-        icon: BookOpen,
       },
     ],
   },

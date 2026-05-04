@@ -9,7 +9,6 @@ import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import TugasPage from './pages/TugasPage'
-import PelajaranPage from './pages/PelajaranPage'
 
 // Fase 1 – Core
 import SantriPage from './pages/SantriPage'
@@ -53,7 +52,6 @@ function App() {
           <Route path="tugas" element={<TugasPage />} />
           <Route path="submisi" element={<SubmissionPage />} />
           <Route path="jurnal" element={<JurnalPage />} />
-          <Route path="pelajaran" element={<PelajaranPage />} />
 
           {/* Fase 3 – Evaluasi */}
           <Route path="nilai" element={<NilaiPage />} />

@@ -96,6 +96,7 @@ function LoginForm({
                 </p>
               </div>
 
+
               {error && (
                 <div className="rounded-md bg-destructive/10 px-4 py-3">
                   <FieldError className="text-center">{error}</FieldError>
@@ -135,13 +136,20 @@ function LoginForm({
                 />
               </Field>
 
-
-
               <Field>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Masuk..." : "Masuk"}
                 </Button>
               </Field>
+
+              <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 p-4 border border-blue-100 dark:border-blue-900">
+                <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
+                  <strong>Hint Login Admin:</strong><br />
+                  <span className="font-mono mt-1 block">admin@pesantren.id</span>
+                  <span className="font-mono">Password123!</span>
+                </p>
+              </div>
+
 
               <FieldDescription className="text-center">
                 Belum punya akun?{" "}
@@ -155,9 +163,13 @@ function LoginForm({
             </FieldGroup>
           </form>
 
+              
+
           <AuthCarousel />
         </CardContent>
       </Card>
+
+
 
       <FieldDescription className="px-6 text-center">
         Dengan masuk, Anda menyetujui{" "}
