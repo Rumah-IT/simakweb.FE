@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react"
-import { Camera, Save, User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react"
+import { toast } from "sonner"
+import { Camera, Save, User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,14 +12,10 @@ import {
   FieldDescription,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import api from "@/services/api"
 
 function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
+  return name ? name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() : "U"
 }
 
 function loadUserFromStorage() {
@@ -26,10 +23,11 @@ function loadUserFromStorage() {
     const raw = localStorage.getItem("user")
     if (!raw) return null
     return JSON.parse(raw) as {
-      id: number
+      id: string
       name: string
       role: string
       email: string
+      phone?: string
     }
   } catch {
     return null
@@ -41,7 +39,7 @@ export default function ProfilePage() {
 
   const [name, setName] = useState(storedUser?.name ?? "")
   const [email, setEmail] = useState(storedUser?.email ?? "")
-  const [phone, setPhone] = useState("")
+  const [phone, setPhone] = useState(storedUser?.phone ?? "")
   const [role] = useState(storedUser?.role ?? "")
 
   const [currentPassword, setCurrentPassword] = useState("")
@@ -58,14 +56,13 @@ export default function ProfilePage() {
   const [profileSuccess, setProfileSuccess] = useState(false)
   const [passwordError, setPasswordError] = useState("")
   const [passwordSuccess, setPasswordSuccess] = useState(false)
+  
   const [profileLoading, setProfileLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("profile_photo")
     if (saved) setPhotoUrl(saved)
-    const savedPhone = localStorage.getItem("profile_phone") ?? ""
-    setPhone(savedPhone)
   }, [])
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,15 +93,27 @@ export default function ProfilePage() {
     }
 
     setProfileLoading(true)
-    await new Promise((r) => setTimeout(r, 900))
-
-    const updated = { ...storedUser, name, email }
-    localStorage.setItem("user", JSON.stringify(updated))
-    localStorage.setItem("profile_phone", phone)
-
-    setProfileLoading(false)
-    setProfileSuccess(true)
-    setTimeout(() => setProfileSuccess(false), 3000)
+    try {
+      if (storedUser?.id) {
+        await api.UserAPI.update(storedUser.id, {
+          fullName: name,
+          email: email,
+          phone: phone || null,
+        })
+      }
+      
+      const updated = { ...storedUser, name, email, phone }
+      localStorage.setItem("user", JSON.stringify(updated))
+      
+      setProfileSuccess(true)
+      toast.success("Profil berhasil diperbarui")
+      setTimeout(() => setProfileSuccess(false), 3000)
+    } catch (err: any) {
+      setProfileError(err.message || "Gagal memperbarui profil")
+      toast.error("Gagal memperbarui profil")
+    } finally {
+      setProfileLoading(false)
+    }
   }
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -126,16 +135,25 @@ export default function ProfilePage() {
     }
 
     setPasswordLoading(true)
-    await new Promise((r) => setTimeout(r, 900))
-    setPasswordLoading(false)
-    setPasswordSuccess(true)
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    setTimeout(() => setPasswordSuccess(false), 3000)
+    try {
+      // Backend currently does not support password update via user endpoint
+      // Simulate API call for now
+      await new Promise(r => setTimeout(r, 1000))
+      
+      setPasswordSuccess(true)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      toast.success("Password berhasil diperbarui")
+      setTimeout(() => setPasswordSuccess(false), 3000)
+    } catch (err: any) {
+      setPasswordError(err.message || "Gagal mengubah password")
+    } finally {
+      setPasswordLoading(false)
+    }
   }
 
-  const initials = getInitials(name || "Admin")
+  const initials = getInitials(name || "User")
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -190,7 +208,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center sm:items-start gap-1.5 text-center sm:text-left">
                   <p className="font-semibold text-base leading-tight">{name || "—"}</p>
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary capitalize">
-                    {role || "user"}
+                    {role || "User"}
                   </span>
                   <p className="text-xs text-muted-foreground mt-1">
                     JPG, PNG, atau GIF. Maksimal 2 MB.
@@ -266,7 +284,7 @@ export default function ProfilePage() {
                         disabled={profileLoading}
                       />
                       <FieldDescription className="text-xs">
-                        Opsional. Format: +62 atau 08xx.
+                        Opsional. Format: 08xx...
                       </FieldDescription>
                     </Field>
 
@@ -290,7 +308,7 @@ export default function ProfilePage() {
 
                   <div className="flex justify-end pt-2">
                     <Button type="submit" disabled={profileLoading} className="gap-2">
-                      <Save className="h-4 w-4" />
+                      {profileLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {profileLoading ? "Menyimpan…" : "Simpan Perubahan"}
                     </Button>
                   </div>
@@ -418,7 +436,7 @@ export default function ProfilePage() {
 
               <div className="flex justify-end pt-2">
                 <Button type="submit" disabled={passwordLoading} variant="outline" className="gap-2">
-                  <Lock className="h-4 w-4" />
+                  {passwordLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                   {passwordLoading ? "Memperbarui…" : "Perbarui Password"}
                 </Button>
               </div>

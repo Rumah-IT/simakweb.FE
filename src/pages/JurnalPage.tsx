@@ -1,90 +1,147 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
-  BookOpenCheck,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  X,
-  Calendar,
-  User,
-  Smile,
-  Meh,
-  Frown,
-  BookOpen,
+  BookOpenCheck,Search, MoreHorizontal,
+  Pencil, Trash2, X, Calendar, User,
+  BookOpen, Loader2, AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
 interface Jurnal {
-  id: number
-  santri: string
+  id: string
+  santriId: string
+  santriName: string
   nis: string
-  kelas: string
-  tanggal: string
-  kegiatan: string
-  kondisi: "baik" | "cukup" | "kurang"
-  catatan: string
+  classId: string
+  className: string
+  date: string
+  activity: string
+  notes: string
 }
 
 const today = new Date().toISOString().split("T")[0]
 
-const initialData: Jurnal[] = [
-  { id: 1, santri: "Ahmad Fauzi", nis: "2024001", kelas: "Kelas A – TI", tanggal: today, kegiatan: "Belajar React hooks bersama pembimbing.", kondisi: "baik", catatan: "Aktif dan semangat belajar." },
-  { id: 2, santri: "Siti Aisyah", nis: "2024002", kelas: "Kelas B – AK", tanggal: today, kegiatan: "Mengerjakan laporan keuangan bulanan.", kondisi: "cukup", catatan: "Butuh bimbingan lebih pada akrual." },
-  { id: 3, santri: "Budi Santoso", nis: "2024003", kelas: "Kelas A – TI", tanggal: today, kegiatan: "Izin sakit, tidak mengikuti kegiatan.", kondisi: "kurang", catatan: "Perlu dipantau kondisinya." },
-  { id: 4, santri: "Nur Halimah", nis: "2024004", kelas: "Kelas C – AG", tanggal: today, kegiatan: "Tahfidz Al-Qur'an dan diskusi fiqih.", kondisi: "baik", catatan: "Hafalan meningkat pesat." },
-]
+type FormState = Omit<Jurnal, "id" | "santriName" | "nis" | "className">
 
-const kondisiConfig = {
-  baik: { label: "Baik", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", icon: <Smile className="h-3.5 w-3.5" /> },
-  cukup: { label: "Cukup", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300", icon: <Meh className="h-3.5 w-3.5" /> },
-  kurang: { label: "Kurang", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300", icon: <Frown className="h-3.5 w-3.5" /> },
-}
-
-const emptyForm: Omit<Jurnal, "id"> = { santri: "", nis: "", kelas: "", tanggal: today, kegiatan: "", kondisi: "baik", catatan: "" }
+const emptyForm: FormState = { santriId: "", classId: "", date: today, activity: "", notes: "" }
 
 export default function JurnalPage() {
-  const [data, setData] = useState<Jurnal[]>(initialData)
+  const [data, setData] = useState<Jurnal[]>([])
+  const [classesList, setClassesList] = useState<{id: string, nama: string}[]>([])
+  const [santriList, setSantriList] = useState<{id: string, nama: string, nis: string}[]>([])
+
   const [search, setSearch] = useState("")
-  const [filterKondisi, setFilterKondisi] = useState("semua")
-  const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Jurnal | null>(null)
-  const [form, setForm] = useState<Omit<Jurnal, "id">>(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [form, setForm] = useState<FormState>(emptyForm)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-  const statCards = [
-    { label: "Total Jurnal", value: data.length, icon: BookOpenCheck, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
-    { label: "Kondisi Baik", value: data.filter(d => d.kondisi === "baik").length, icon: Smile, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
-    { label: "Kondisi Cukup", value: data.filter(d => d.kondisi === "cukup").length, icon: Meh, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/40" },
-    { label: "Kondisi Kurang", value: data.filter(d => d.kondisi === "kurang").length, icon: Frown, color: "text-red-600", bg: "bg-red-50 dark:bg-red-950/40" },
-  ]
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [resJournals, resClass, resSantri] = await Promise.all([
+        api.DailyJournalAPI.getAll(),
+        api.ClassAPI.getAll(),
+        api.SantriAPI.getAll()
+      ])
 
-  const filtered = data.filter(j => {
-    const matchSearch = j.santri.toLowerCase().includes(search.toLowerCase()) || j.kelas.toLowerCase().includes(search.toLowerCase()) || j.kegiatan.toLowerCase().includes(search.toLowerCase())
-    const matchKondisi = filterKondisi === "semua" || j.kondisi === filterKondisi
-    return matchSearch && matchKondisi
-  })
+      const classesArray = Array.isArray(resClass.data) ? resClass.data : (resClass.data?.data || [])
+      setClassesList(classesArray.map((c: any) => ({ id: c.id, nama: c.name })))
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
-  const openEdit = (j: Jurnal) => { setEditTarget(j); setForm({ santri: j.santri, nis: j.nis, kelas: j.kelas, tanggal: j.tanggal, kegiatan: j.kegiatan, kondisi: j.kondisi, catatan: j.catatan }); setMenuOpen(null); setModalOpen(true) }
+      const santriArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
+      setSantriList(santriArray.map((s: any) => ({ id: s.id, nama: s.fullName, nis: s.santriProfile?.nis || "-" })))
 
-  const handleSave = () => {
-    if (!form.santri || !form.kelas || !form.tanggal || !form.kegiatan) { toast.error("Harap lengkapi semua field wajib."); return }
-    if (editTarget) {
-      setData(prev => prev.map(j => j.id === editTarget.id ? { ...j, ...form } : j))
-      toast.success("Jurnal berhasil diperbarui.")
-    } else {
-      setData(prev => [...prev, { id: Math.max(0, ...data.map(j => j.id)) + 1, ...form }])
-      toast.success("Jurnal berhasil dicatat.")
+      const jArray = Array.isArray(resJournals.data) ? resJournals.data : (resJournals.data?.data || [])
+      const mapped = jArray.map((j: any) => ({
+        id: j.id,
+        santriId: j.santriId,
+        santriName: j.santri?.fullName || "-",
+        nis: j.santri?.nis || "-",
+        classId: j.classId,
+        className: j.class?.name || "-",
+        date: j.date ? j.date.split("T")[0] : "",
+        activity: j.activity,
+        notes: j.notes || "",
+      }))
+      setData(mapped)
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat jurnal harian")
+      toast.error("Gagal memuat jurnal harian")
+    } finally {
+      setLoading(false)
     }
-    setModalOpen(false)
   }
 
-  const handleDelete = (id: number) => { setData(prev => prev.filter(j => j.id !== id)); setDeleteConfirm(null); setMenuOpen(null); toast.success("Jurnal berhasil dihapus.") }
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const filtered = data.filter(j => {
+    const q = search.toLowerCase()
+    return j.santriName.toLowerCase().includes(q) || j.className.toLowerCase().includes(q) || j.activity.toLowerCase().includes(q)
+  })
+
+  
+  const openEdit = (j: Jurnal) => { 
+    setEditTarget(j); 
+    setForm({ santriId: j.santriId, classId: j.classId, date: j.date, activity: j.activity, notes: j.notes }); 
+    setMenuOpen(null); 
+    setModalOpen(true) 
+  }
+
+  const handleSave = async () => {
+    if (!form.santriId || !form.classId || !form.date || !form.activity) { 
+      toast.error("Harap lengkapi field santri, kelas, tanggal, dan kegiatan.")
+      return 
+    }
+    
+    setSaving(true)
+    try {
+      const payload = {
+        santriId: form.santriId,
+        classId: form.classId,
+        date: new Date(form.date).toISOString(),
+        activity: form.activity,
+        notes: form.notes
+      }
+
+      if (editTarget) {
+        await api.DailyJournalAPI.update(editTarget.id, payload)
+        toast.success("Jurnal berhasil diperbarui.")
+      } else {
+        await api.DailyJournalAPI.create(payload)
+        toast.success("Jurnal berhasil dicatat.")
+      }
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan jurnal.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => { 
+    try {
+      await api.DailyJournalAPI.delete(id)
+      toast.success("Jurnal berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus jurnal.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -97,15 +154,13 @@ export default function JurnalPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map(card => (
-          <Card key={card.label} className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
-              <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
-            </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
-          </Card>
-        ))}
+        <Card className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Jurnal</CardTitle>
+            <div className="rounded-lg p-2 bg-violet-50 dark:bg-violet-950/40"><BookOpenCheck className="h-4 w-4 text-violet-600" /></div>
+          </CardHeader>
+          <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : data.length}</div></CardContent>
+        </Card>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -114,24 +169,23 @@ export default function JurnalPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input id="search-jurnal" type="text" placeholder="Cari santri, kelas, kegiatan..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
           </div>
-          <Select value={filterKondisi} onValueChange={setFilterKondisi}>
-            <SelectTrigger id="filter-kondisi-jurnal" className="w-40">
-              <SelectValue placeholder="Semua Kondisi" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua Kondisi</SelectItem>
-              <SelectItem value="baik">Baik</SelectItem>
-              <SelectItem value="cukup">Cukup</SelectItem>
-              <SelectItem value="kurang">Kurang</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
-        <button id="btn-catat-jurnal" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Catat Jurnal
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -140,30 +194,25 @@ export default function JurnalPage() {
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Santri</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Tanggal</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kegiatan</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kondisi</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Catatan</th>
                 <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground"><BookOpen className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada jurnal ditemukan.</td></tr>
+              {!loading && filtered.length === 0 ? (
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><BookOpen className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada jurnal ditemukan.</td></tr>
               ) : filtered.map((j, idx) => {
-                const cfg = kondisiConfig[j.kondisi]
                 return (
                   <tr key={j.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-muted-foreground" /><div><div className="font-medium">{j.santri}</div><div className="text-xs text-muted-foreground">{j.kelas}</div></div></div>
+                      <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-muted-foreground" /><div><div className="font-medium">{j.santriName}</div><div className="text-xs text-muted-foreground">{j.className}</div></div></div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-muted-foreground" />{new Date(j.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</div>
+                      <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-muted-foreground" />{new Date(j.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</div>
                     </td>
-                    <td className="px-4 py-3 max-w-[200px]"><p className="line-clamp-2 text-sm">{j.kegiatan}</p></td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.className}`}>{cfg.icon}{cfg.label}</span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground max-w-[150px]"><p className="line-clamp-2 text-xs">{j.catatan || "—"}</p></td>
+                    <td className="px-4 py-3 max-w-[250px]"><p className="line-clamp-2 text-sm">{j.activity}</p></td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px]"><p className="line-clamp-2 text-xs">{j.notes || "—"}</p></td>
                     <td className="px-4 py-3 text-right">
                       <div className="relative inline-block">
                         <button id={`menu-jurnal-${j.id}`} onClick={() => setMenuOpen(menuOpen === j.id ? null : j.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
@@ -193,44 +242,47 @@ export default function JurnalPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Santri <span className="text-red-500">*</span></label>
-                  <input id="input-santri-jurnal" type="text" placeholder="Ahmad Fauzi" value={form.santri} onChange={e => setForm({ ...form, santri: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
+                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v })}>
+                    <SelectTrigger id="input-santri-jurnal" className="w-full">
+                      <SelectValue placeholder="Pilih santri..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {santriList.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} ({s.nis})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">NIS</label>
-                  <input id="input-nis-jurnal" type="text" placeholder="2024001" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <input id="input-kelas-jurnal" type="text" placeholder="Kelas A – TI" value={form.kelas} onChange={e => setForm({ ...form, kelas: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v })}>
+                    <SelectTrigger id="input-kelas-jurnal" className="w-full">
+                      <SelectValue placeholder="Pilih kelas..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Tanggal <span className="text-red-500">*</span></label>
-                  <input id="input-tanggal-jurnal" type="date" value={form.tanggal} onChange={e => setForm({ ...form, tanggal: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Tanggal <span className="text-red-500">*</span></label>
+                <input id="input-tanggal-jurnal" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Kegiatan Hari Ini <span className="text-red-500">*</span></label>
-                <textarea id="input-kegiatan-jurnal" rows={2} placeholder="Deskripsikan kegiatan santri..." value={form.kegiatan} onChange={e => setForm({ ...form, kegiatan: e.target.value })} className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Kondisi</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["baik", "cukup", "kurang"] as const).map(k => (
-                    <button key={k} onClick={() => setForm({ ...form, kondisi: k })} className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition ${form.kondisi === k ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{kondisiConfig[k].icon}{kondisiConfig[k].label}</button>
-                  ))}
-                </div>
+                <textarea id="input-kegiatan-jurnal" rows={2} placeholder="Deskripsikan kegiatan santri..." value={form.activity} onChange={e => setForm({ ...form, activity: e.target.value })} className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Catatan Tambahan</label>
-                <input id="input-catatan-jurnal" type="text" placeholder="Catatan opsional..." value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                <input id="input-catatan-jurnal" type="text" placeholder="Catatan opsional..." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-jurnal" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">{editTarget ? "Simpan Perubahan" : "Catat"}</button>
+              <button onClick={() => setModalOpen(false)} disabled={saving} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
+              <button id="btn-simpan-jurnal" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editTarget ? "Simpan Perubahan" : "Catat"}
+              </button>
             </div>
           </div>
         </div>
@@ -245,8 +297,10 @@ export default function JurnalPage() {
             </div>
             <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus jurnal ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-jurnal" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} disabled={loading} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
+              <button id="btn-konfirm-hapus-jurnal" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>

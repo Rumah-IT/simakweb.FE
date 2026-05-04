@@ -1,8 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
   School,
-  Plus,
   Search,
   MoreHorizontal,
   Pencil,
@@ -12,39 +11,85 @@ import {
   CheckCircle2,
   XCircle,
   Layers,
+  Loader2,
+  AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
 interface Kelas {
-  id: number
+  id: string
   nama: string
+  divisiId: string
   divisi: string
   kapasitas: number
   jumlahSantri: number
   status: "aktif" | "nonaktif"
+  mentorId: string
   pengajar: string
 }
 
-const initialData: Kelas[] = [
-  { id: 1, nama: "Kelas A", divisi: "Teknologi Informasi", kapasitas: 30, jumlahSantri: 25, status: "aktif", pengajar: "Ust. Hasan" },
-  { id: 2, nama: "Kelas B", divisi: "Teknologi Informasi", kapasitas: 30, jumlahSantri: 28, status: "aktif", pengajar: "Ust. Ridwan" },
-  { id: 3, nama: "Kelas A", divisi: "Akuntansi", kapasitas: 25, jumlahSantri: 20, status: "aktif", pengajar: "Ust. Salim" },
-  { id: 4, nama: "Kelas B", divisi: "Akuntansi", kapasitas: 25, jumlahSantri: 22, status: "aktif", pengajar: "Ust. Hamid" },
-  { id: 5, nama: "Kelas C", divisi: "Agama", kapasitas: 35, jumlahSantri: 0, status: "nonaktif", pengajar: "-" },
-]
-
-const emptyForm: Omit<Kelas, "id" | "jumlahSantri"> = { nama: "", divisi: "", kapasitas: 30, status: "aktif", pengajar: "" }
+const emptyForm: Omit<Kelas, "id" | "jumlahSantri" | "divisi" | "pengajar"> = { nama: "", divisiId: "", kapasitas: 30, status: "aktif", mentorId: "" }
 
 export default function KelasPage() {
-  const [data, setData] = useState<Kelas[]>(initialData)
+  const [data, setData] = useState<Kelas[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  const [divisions, setDivisions] = useState<{id: string, name: string}[]>([])
+  const [mentors, setMentors] = useState<{id: string, fullName: string}[]>([])
+
   const [search, setSearch] = useState("")
   const [filterDivisi, setFilterDivisi] = useState("semua")
-  const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Kelas | null>(null)
-  const [form, setForm] = useState<Omit<Kelas, "id" | "jumlahSantri">>(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [form, setForm] = useState<Omit<Kelas, "id" | "jumlahSantri" | "divisi" | "pengajar">>(emptyForm)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [resClasses, resDivisions, resMentors] = await Promise.all([
+        api.ClassAPI.getAll(),
+        api.DivisiAPI.getAll(),
+        api.AuthAPI.getMentors()
+      ])
+      
+      const divisionsArray = Array.isArray(resDivisions.data) ? resDivisions.data : (resDivisions.data?.data || [])
+      const mentorsArray = Array.isArray(resMentors.data) ? resMentors.data : (resMentors.data?.data || [])
+      const classesArray = Array.isArray(resClasses.data) ? resClasses.data : (resClasses.data?.data || [])
+
+      setDivisions(divisionsArray)
+      setMentors(mentorsArray)
+
+      const mapped = classesArray.map((c: any) => ({
+        id: c.id,
+        nama: c.name,
+        divisiId: c.divisiId,
+        divisi: c.division?.name || "-",
+        mentorId: c.mentorId,
+        pengajar: c.mentor?.fullName || "-",
+        kapasitas: 30, // Mocked as DB doesn't have it
+        jumlahSantri: c._count?.santriProfiles || 0,
+        status: "aktif" // Mocked
+      }))
+      setData(mapped)
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat data kelas")
+      toast.error("Gagal mengambil data kelas")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const divisiList = [...new Set(data.map(d => d.divisi))]
   const statCards = [
@@ -60,22 +105,47 @@ export default function KelasPage() {
     return matchSearch && matchDivisi
   })
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
-  const openEdit = (k: Kelas) => { setEditTarget(k); setForm({ nama: k.nama, divisi: k.divisi, kapasitas: k.kapasitas, status: k.status, pengajar: k.pengajar }); setMenuOpen(null); setModalOpen(true) }
+  const openEdit = (k: Kelas) => { setEditTarget(k); setForm({ nama: k.nama, divisiId: k.divisiId, kapasitas: k.kapasitas, status: k.status, mentorId: k.mentorId }); setMenuOpen(null); setModalOpen(true) }
 
-  const handleSave = () => {
-    if (!form.nama || !form.divisi) { toast.error("Nama kelas dan divisi wajib diisi."); return }
-    if (editTarget) {
-      setData(prev => prev.map(k => k.id === editTarget.id ? { ...k, ...form } : k))
-      toast.success("Kelas berhasil diperbarui.")
-    } else {
-      setData(prev => [...prev, { id: Math.max(0, ...data.map(k => k.id)) + 1, jumlahSantri: 0, ...form }])
-      toast.success("Kelas berhasil ditambahkan.")
+  const handleSave = async () => {
+    if (!form.nama || !form.divisiId || !form.mentorId) { toast.error("Nama kelas, divisi, dan pengajar wajib diisi."); return }
+    
+    setSaving(true)
+    try {
+      const payload = {
+        name: form.nama,
+        divisiId: form.divisiId,
+        mentorId: form.mentorId
+      }
+
+      if (editTarget) {
+        await api.ClassAPI.update(editTarget.id, payload)
+        toast.success("Kelas berhasil diperbarui.")
+      } else {
+        await api.ClassAPI.create(payload)
+        toast.success("Kelas berhasil ditambahkan.")
+      }
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan data kelas.")
+    } finally {
+      setSaving(false)
     }
-    setModalOpen(false)
   }
 
-  const handleDelete = (id: number) => { setData(prev => prev.filter(k => k.id !== id)); setDeleteConfirm(null); setMenuOpen(null); toast.success("Kelas berhasil dihapus.") }
+  const handleDelete = async (id: string) => {
+    try {
+      await api.ClassAPI.delete(id)
+      toast.success("Kelas berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus kelas.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -94,7 +164,7 @@ export default function KelasPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
@@ -115,12 +185,22 @@ export default function KelasPage() {
             </SelectContent>
           </Select>
         </div>
-        <button id="btn-tambah-kelas" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Tambah Kelas
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -128,14 +208,14 @@ export default function KelasPage() {
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">#</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama Kelas</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Divisi</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Pengajar</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Pengajar (Mentor)</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kapasitas</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
                 <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {!loading && filtered.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground"><School className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada kelas ditemukan.</td></tr>
               ) : filtered.map((k, idx) => {
                 const fillPct = Math.round((k.jumlahSantri / k.kapasitas) * 100)
@@ -185,7 +265,7 @@ export default function KelasPage() {
               <h2 className="text-lg font-bold">{editTarget ? "Edit Kelas" : "Tambah Kelas"}</h2>
               <button onClick={() => setModalOpen(false)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Kelas <span className="text-red-500">*</span></label>
@@ -193,21 +273,39 @@ export default function KelasPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Divisi <span className="text-red-500">*</span></label>
-                  <input id="input-divisi-kelas" type="text" placeholder="Teknologi Informasi" value={form.divisi} onChange={e => setForm({ ...form, divisi: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <Select value={form.divisiId} onValueChange={v => setForm({ ...form, divisiId: v })}>
+                    <SelectTrigger id="input-divisi-kelas" className="w-full">
+                      <SelectValue placeholder="Pilih Divisi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {divisions.map(d => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pengajar</label>
-                  <input id="input-pengajar-kelas" type="text" placeholder="Ust. Hasan" value={form.pengajar} onChange={e => setForm({ ...form, pengajar: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pengajar (Mentor) <span className="text-red-500">*</span></label>
+                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v })}>
+                    <SelectTrigger id="input-mentor-kelas" className="w-full">
+                      <SelectValue placeholder="Pilih Mentor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mentors.map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Kapasitas</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Kapasitas (Mock)</label>
                   <input id="input-kapasitas-kelas" type="number" min={1} value={form.kapasitas} onChange={e => setForm({ ...form, kapasitas: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Status (Mock)</label>
                 <Select value={form.status} onValueChange={v => setForm({ ...form, status: v as Kelas["status"] })}>
                   <SelectTrigger id="input-status-kelas" className="w-full">
                     <SelectValue />
@@ -220,8 +318,11 @@ export default function KelasPage() {
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-kelas" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">{editTarget ? "Simpan Perubahan" : "Tambah"}</button>
+              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={saving}>Batal</button>
+              <button id="btn-simpan-kelas" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editTarget ? "Simpan Perubahan" : "Tambah"}
+              </button>
             </div>
           </div>
         </div>
@@ -236,8 +337,10 @@ export default function KelasPage() {
             </div>
             <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus kelas ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-kelas" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={loading}>Batal</button>
+              <button id="btn-konfirm-hapus-kelas" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>

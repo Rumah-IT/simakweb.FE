@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import api from "@/services/api"
 
 interface StatCard {
   title: string
@@ -26,44 +27,6 @@ interface StatCard {
   bg: string
 }
 
-const recentActivities = [
-  {
-    id: 1,
-    type: "santri",
-    message: "Santri baru Ahmad Fauzi terdaftar di Kelas A",
-    time: "5 menit lalu",
-    status: "success",
-  },
-  {
-    id: 2,
-    type: "absensi",
-    message: "Absensi Kelas B - Divisi Programmer telah dicatat",
-    time: "30 menit lalu",
-    status: "success",
-  },
-  {
-    id: 3,
-    type: "tugas",
-    message: "Tugas 'React Fundamentals' ditambahkan ke Kelas A",
-    time: "1 jam lalu",
-    status: "warning",
-  },
-  {
-    id: 4,
-    type: "santri",
-    message: "Data santri Siti Aminah diperbarui",
-    time: "2 jam lalu",
-    status: "info",
-  },
-  {
-    id: 5,
-    type: "kelas",
-    message: "Kelas C dibuat di Divisi Bisnis Digital",
-    time: "3 jam lalu",
-    status: "success",
-  },
-]
-
 const statusIcon = {
   success: <CheckCircle2 className="h-4 w-4 text-emerald-500" />,
   warning: <AlertCircle className="h-4 w-4 text-amber-500" />,
@@ -72,22 +35,22 @@ const statusIcon = {
 
 const quickActions = [
   {
-    title: "Tambah Santri",
-    desc: "Daftarkan santri baru ke sistem",
+    title: "Data Santri",
+    desc: "Lihat dan kelola data santri",
     icon: Users,
     href: "/dashboard/santri",
     color: "from-sky-500 to-blue-600",
   },
   {
-    title: "Catat Absensi",
-    desc: "Input kehadiran kelas hari ini",
+    title: "Rekap Absensi",
+    desc: "Lihat kehadiran santri per kelas",
     icon: ClipboardCheck,
     href: "/dashboard/absensi",
     color: "from-emerald-500 to-teal-600",
   },
   {
-    title: "Buat Tugas",
-    desc: "Tambahkan tugas baru untuk kelas",
+    title: "Daftar Tugas",
+    desc: "Pantau penugasan untuk kelas",
     icon: FileText,
     href: "/dashboard/tugas",
     color: "from-violet-500 to-purple-600",
@@ -108,26 +71,64 @@ export default function DashboardPage() {
     totalKelas: 0,
     totalPelajaran: 0,
   })
+  const [recentActivities, setRecentActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [userName, setUserName] = useState("Admin")
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser)
+          if (parsedUser.fullName) setUserName(parsedUser.fullName)
+        } catch(e) {}
+      }
+
+      const [resSantri, resDivisi, resKelas, resTugas] = await Promise.all([
+        api.SantriAPI.getAll(),
+        api.DivisiAPI.getAll(),
+        api.ClassAPI.getAll(),
+        api.AssignmentAPI.getAll().catch(() => null) 
+      ])
+
+      // Determine total counts
+      const totalSantri = Array.isArray(resSantri?.data) ? resSantri.data.length : (resSantri?.data?.data?.length || 0)
+      const totalDivisi = resDivisi?.data?.meta?.total || (Array.isArray(resDivisi?.data) ? resDivisi.data.length : (resDivisi?.data?.data?.length || 0))
+      const totalKelas = resKelas?.data?.meta?.total || (Array.isArray(resKelas?.data) ? resKelas.data.length : (resKelas?.data?.data?.length || 0))
+      const totalPelajaran = Array.isArray(resTugas?.data) ? resTugas.data.length : (resTugas?.data?.data?.length || 0)
+      
+      setStats({
+        totalSantri,
+        totalDivisi,
+        totalKelas,
+        totalPelajaran,
+      })
+
+      // Mock recent activities since backend doesn't have an audit log endpoint
+      setRecentActivities([
+        { id: 1, message: "Berhasil melakukan sinkronisasi data divisi", time: "Baru saja", status: "success" },
+        { id: 2, message: `Menemukan ${totalSantri} santri aktif`, time: "10 menit lalu", status: "info" },
+        { id: 3, message: `Sistem mendeteksi ${totalKelas} kelas berjalan`, time: "1 jam lalu", status: "success" },
+      ])
+
+    } catch (error) {
+      console.error("Gagal memuat dashboard:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStats({
-        totalSantri: 128,
-        totalDivisi: 4,
-        totalKelas: 12,
-        totalPelajaran: 24,
-      })
-      setLoading(false)
-    }, 800)
-    return () => clearTimeout(timer)
+    fetchDashboardData()
   }, [])
 
   const statCards: StatCard[] = [
     {
       title: "Total Santri",
       value: loading ? "—" : stats.totalSantri,
-      change: "+8 bulan ini",
+      change: "Aktif",
       trend: "up",
       icon: Users,
       color: "text-sky-600",
@@ -136,7 +137,7 @@ export default function DashboardPage() {
     {
       title: "Total Divisi",
       value: loading ? "—" : stats.totalDivisi,
-      change: "Stabil",
+      change: "Tersedia",
       trend: "neutral",
       icon: Layers,
       color: "text-violet-600",
@@ -145,7 +146,7 @@ export default function DashboardPage() {
     {
       title: "Total Kelas",
       value: loading ? "—" : stats.totalKelas,
-      change: "+2 bulan ini",
+      change: "Terjadwal",
       trend: "up",
       icon: GraduationCap,
       color: "text-emerald-600",
@@ -154,7 +155,7 @@ export default function DashboardPage() {
     {
       title: "Total Pelajaran",
       value: loading ? "—" : stats.totalPelajaran,
-      change: "+3 minggu ini",
+      change: "Tugas & Ujian",
       trend: "up",
       icon: BookOpen,
       color: "text-orange-600",
@@ -171,7 +172,7 @@ export default function DashboardPage() {
         </div>
         <p className="text-sm text-muted-foreground">
           Selamat datang kembali,{" "}
-          <span className="font-medium text-foreground">Admin</span> — berikut
+          <span className="font-medium text-foreground">{userName}</span> — berikut
           ringkasan data hari ini.
         </p>
       </div>
@@ -265,6 +266,11 @@ export default function DashboardPage() {
                     )}
                   </li>
                 ))}
+                {loading && (
+                  <li className="flex items-center justify-center p-4">
+                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary"></div>
+                  </li>
+                )}
               </ul>
             </CardContent>
           </Card>

@@ -1,103 +1,165 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
-  UserCog,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  X,
-  Phone,
-  Mail,
-  MapPin,
-  Users,
-  UserCheck,
+  UserCog,Search, MoreHorizontal,
+  Pencil, Trash2, X, Phone, Mail,
+  MapPin, Loader2, AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
 interface Wali {
-  id: number
+  id: string
+  userId: string
   nama: string
-  hubungan: "ayah" | "ibu" | "wali"
   telepon: string
   email: string
   pekerjaan: string
   alamat: string
-  jumlahSantri: number
 }
 
-const initialData: Wali[] = [
-  { id: 1, nama: "Bapak Hendra Gunawan", hubungan: "ayah", telepon: "08211000001", email: "hendra@email.com", pekerjaan: "Wirausaha", alamat: "Jl. Merdeka No. 1, Jakarta", jumlahSantri: 2 },
-  { id: 2, nama: "Ibu Sari Dewi", hubungan: "ibu", telepon: "08211000002", email: "sari@email.com", pekerjaan: "PNS", alamat: "Jl. Sudirman No. 5, Bandung", jumlahSantri: 1 },
-  { id: 3, nama: "Bapak Zainal Abidin", hubungan: "wali", telepon: "08211000003", email: "zainal@email.com", pekerjaan: "Guru", alamat: "Jl. Pahlawan No. 10, Surabaya", jumlahSantri: 3 },
-  { id: 4, nama: "Ibu Fatimah Azzahra", hubungan: "ibu", telepon: "08211000004", email: "fatimah@email.com", pekerjaan: "Dokter", alamat: "Jl. Diponegoro No. 7, Yogyakarta", jumlahSantri: 1 },
-]
-
-const hubunganConfig = {
-  ayah: { label: "Ayah", className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" },
-  ibu: { label: "Ibu", className: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300" },
-  wali: { label: "Wali", className: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
-}
-
-const emptyForm: Omit<Wali, "id" | "jumlahSantri"> = { nama: "", hubungan: "ayah", telepon: "", email: "", pekerjaan: "", alamat: "" }
+const emptyForm = { userId: "", nama: "", telepon: "", email: "", pekerjaan: "", alamat: "", photoFile: null as File | null }
 
 export default function WaliPage() {
-  const [data, setData] = useState<Wali[]>(initialData)
+  const [data, setData] = useState<Wali[]>([])
+  const [userList, setUserList] = useState<{id: string, nama: string, email: string}[]>([])
+
   const [search, setSearch] = useState("")
-  const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
+  
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Wali | null>(null)
-  const [form, setForm] = useState<Omit<Wali, "id" | "jumlahSantri">>(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [form, setForm] = useState(emptyForm)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [resWali, resUsers] = await Promise.all([
+        api.WaliAPI.getAll(),
+        api.AuthAPI.getUsers()
+      ])
+
+      const wArray = Array.isArray(resWali.data) ? resWali.data : (resWali.data?.data || [])
+      const mapped = wArray.map((w: any) => ({
+        id: w.id,
+        userId: w.userId,
+        nama: w.fullName || "-",
+        telepon: w.phone || "-",
+        email: w.email || "-",
+        pekerjaan: w.job || "-",
+        alamat: w.address || "-"
+      }))
+      setData(mapped)
+
+      // Get users with role WALI_SANTRI to associate profile with
+      const uArray = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || [])
+      setUserList(uArray.filter((u: any) => u.role === "WALI_SANTRI").map((u: any) => ({
+        id: u.id,
+        nama: u.fullName,
+        email: u.email
+      })))
+
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat profil wali")
+      toast.error("Gagal memuat daftar profil wali")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const statCards = [
-    { label: "Total Wali", value: data.length, icon: UserCog, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
-    { label: "Ayah", value: data.filter(d => d.hubungan === "ayah").length, icon: UserCheck, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-950/40" },
-    { label: "Ibu", value: data.filter(d => d.hubungan === "ibu").length, icon: UserCheck, color: "text-pink-600", bg: "bg-pink-50 dark:bg-pink-950/40" },
-    { label: "Total Santri Terdaftar", value: data.reduce((a, d) => a + d.jumlahSantri, 0), icon: Users, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
+    { label: "Total Profil Wali", value: data.length, icon: UserCog, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
+    { label: "Akun Wali", value: userList.length, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-950/40" },
   ]
 
   const filtered = data.filter(w =>
-    w.nama.toLowerCase().includes(search.toLowerCase()) || w.telepon.includes(search) || w.email.toLowerCase().includes(search.toLowerCase())
+    w.nama.toLowerCase().includes(search.toLowerCase()) || 
+    w.telepon.includes(search) || 
+    w.email.toLowerCase().includes(search.toLowerCase())
   )
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
-  const openEdit = (w: Wali) => { setEditTarget(w); setForm({ nama: w.nama, hubungan: w.hubungan, telepon: w.telepon, email: w.email, pekerjaan: w.pekerjaan, alamat: w.alamat }); setMenuOpen(null); setModalOpen(true) }
-
-  const handleSave = () => {
-    if (!form.nama || !form.telepon) { toast.error("Nama dan nomor telepon wajib diisi."); return }
-    if (editTarget) {
-      setData(prev => prev.map(w => w.id === editTarget.id ? { ...w, ...form } : w))
-      toast.success("Data wali berhasil diperbarui.")
-    } else {
-      setData(prev => [...prev, { id: Math.max(0, ...data.map(w => w.id)) + 1, jumlahSantri: 0, ...form }])
-      toast.success("Wali berhasil ditambahkan.")
-    }
-    setModalOpen(false)
+  const openEdit = (w: Wali) => { 
+    setEditTarget(w); 
+    setForm({ userId: w.userId, nama: w.nama, telepon: w.telepon === "-" ? "" : w.telepon, email: w.email === "-" ? "" : w.email, pekerjaan: w.pekerjaan === "-" ? "" : w.pekerjaan, alamat: w.alamat === "-" ? "" : w.alamat, photoFile: null }); 
+    setMenuOpen(null); 
+    setModalOpen(true) 
   }
 
-  const handleDelete = (id: number) => { setData(prev => prev.filter(w => w.id !== id)); setDeleteConfirm(null); setMenuOpen(null); toast.success("Data wali berhasil dihapus.") }
+  const handleSave = async () => {
+    if (!form.nama) { toast.error("Nama wajib diisi."); return }
+    if (!editTarget && !form.userId) { toast.error("Akun User wajib dipilih untuk profil baru."); return }
+    if (!editTarget && !form.photoFile) { toast.error("Foto profil wajib diunggah."); return }
+
+    setSaving(true)
+    try {
+      const formData = new FormData()
+      formData.append("fullName", form.nama)
+      formData.append("email", form.email || "email@example.com")
+      if (form.telepon) formData.append("phone", form.telepon)
+      if (form.alamat) formData.append("address", form.alamat)
+      if (form.pekerjaan) formData.append("job", form.pekerjaan)
+      if (form.photoFile) formData.append("photoUrl", form.photoFile)
+
+      if (editTarget) {
+        await api.WaliAPI.update(editTarget.id, formData)
+        toast.success("Data profil wali berhasil diperbarui.")
+      } else {
+        formData.append("userId", form.userId)
+        await api.WaliAPI.create(formData)
+        toast.success("Profil wali berhasil ditambahkan.")
+      }
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan data wali.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.WaliAPI.delete(id)
+      toast.success("Data wali berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus data wali.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <UserCog className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Wali Santri</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Profil Wali Santri</h1>
         </div>
-        <p className="text-sm text-muted-foreground">Kelola data wali atau orang tua santri yang terdaftar.</p>
+        <p className="text-sm text-muted-foreground">Kelola profil biodata wali atau orang tua santri yang terdaftar.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
         {statCards.map(card => (
           <Card key={card.label} className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
@@ -107,30 +169,37 @@ export default function WaliPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input id="search-wali" type="text" placeholder="Cari nama, telepon, atau email..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
         </div>
-        <button id="btn-tambah-wali" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Tambah Wali
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">#</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama Wali</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Hubungan</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kontak</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Pekerjaan</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Santri</th>
                 <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground"><UserCog className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada wali ditemukan.</td></tr>
+              {!loading && filtered.length === 0 ? (
+                <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground"><UserCog className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada profil wali ditemukan.</td></tr>
               ) : filtered.map((w, idx) => {
-                const cfg = hubunganConfig[w.hubungan]
                 return (
                   <tr key={w.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
@@ -138,15 +207,11 @@ export default function WaliPage() {
                       <div className="font-medium">{w.nama}</div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" />{w.alamat}</div>
                     </td>
-                    <td className="px-4 py-3"><span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${cfg.className}`}>{cfg.label}</span></td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5 text-xs"><Phone className="h-3 w-3 text-muted-foreground" />{w.telepon}</div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Mail className="h-3 w-3" />{w.email}</div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{w.pekerjaan}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium"><Users className="h-3 w-3" />{w.jumlahSantri} santri</span>
-                    </td>
                     <td className="px-4 py-3 text-right">
                       <div className="relative inline-block">
                         <button id={`menu-wali-${w.id}`} onClick={() => setMenuOpen(menuOpen === w.id ? null : w.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
@@ -170,10 +235,23 @@ export default function WaliPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
           <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold">{editTarget ? "Edit Wali" : "Tambah Wali Santri"}</h2>
+              <h2 className="text-lg font-bold">{editTarget ? "Edit Profil Wali" : "Tambah Profil Wali"}</h2>
               <button onClick={() => setModalOpen(false)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
             <div className="space-y-4">
+              {!editTarget && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pilih Akun Wali (User) <span className="text-red-500">*</span></label>
+                  <Select value={form.userId} onValueChange={v => setForm({ ...form, userId: v })}>
+                    <SelectTrigger id="input-userid-wali" className="w-full">
+                      <SelectValue placeholder="Pilih akun..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userList.map(u => <SelectItem key={u.id} value={u.id}>{u.nama} ({u.email})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Lengkap <span className="text-red-500">*</span></label>
@@ -182,41 +260,37 @@ export default function WaliPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Hubungan</label>
-                  <Select value={form.hubungan} onValueChange={v => setForm({ ...form, hubungan: v as Wali["hubungan"] })}>
-                    <SelectTrigger id="input-hubungan-wali" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ayah">Ayah</SelectItem>
-                      <SelectItem value="ibu">Ibu</SelectItem>
-                      <SelectItem value="wali">Wali</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Telepon <span className="text-red-500">*</span></label>
-                  <input id="input-telepon-wali" type="text" placeholder="0821xxxxxxx" value={form.telepon} onChange={e => setForm({ ...form, telepon: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Email</label>
                   <input id="input-email-wali" type="email" placeholder="email@contoh.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Telepon</label>
+                  <input id="input-telepon-wali" type="text" placeholder="0821xxxxxxx" value={form.telepon} onChange={e => setForm({ ...form, telepon: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Pekerjaan</label>
                   <input id="input-pekerjaan-wali" type="text" placeholder="Wirausaha" value={form.pekerjaan} onChange={e => setForm({ ...form, pekerjaan: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Alamat</label>
-                <textarea id="input-alamat-wali" rows={2} placeholder="Jl. ..." value={form.alamat} onChange={e => setForm({ ...form, alamat: e.target.value })} className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Alamat</label>
+                  <textarea id="input-alamat-wali" rows={2} placeholder="Jl. ..." value={form.alamat} onChange={e => setForm({ ...form, alamat: e.target.value })} className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Foto Profil {editTarget ? "(Opsional)" : <span className="text-red-500">*</span>}</label>
+                  <input id="input-foto-wali" type="file" accept="image/*" onChange={e => setForm({ ...form, photoFile: e.target.files?.[0] || null })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+                </div>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-wali" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">{editTarget ? "Simpan Perubahan" : "Tambah"}</button>
+              <button onClick={() => setModalOpen(false)} disabled={saving} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
+              <button id="btn-simpan-wali" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editTarget ? "Simpan Perubahan" : "Tambah Profil"}
+              </button>
             </div>
           </div>
         </div>
@@ -227,12 +301,14 @@ export default function WaliPage() {
           <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-2xl ring-1 ring-border/60" onClick={e => e.stopPropagation()}>
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40"><Trash2 className="h-5 w-5 text-red-500" /></div>
-              <div><h3 className="font-semibold">Hapus Wali</h3><p className="text-xs text-muted-foreground">Tindakan ini tidak dapat dibatalkan.</p></div>
+              <div><h3 className="font-semibold">Hapus Profil Wali</h3><p className="text-xs text-muted-foreground">Tindakan ini tidak dapat dibatalkan.</p></div>
             </div>
-            <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus data wali ini?</p>
+            <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus data profil ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-wali" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} disabled={loading} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
+              <button id="btn-konfirm-hapus-wali" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>

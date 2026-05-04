@@ -1,8 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
   Layers,
-  Plus,
   Search,
   MoreHorizontal,
   Pencil,
@@ -12,12 +11,14 @@ import {
   XCircle,
   BookOpen,
   Hash,
+  Loader2,
+  AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
 interface Divisi {
-  id: number
+  id: string
   nama: string
   kode: string
   deskripsi: string
@@ -25,23 +26,48 @@ interface Divisi {
   status: "aktif" | "nonaktif"
 }
 
-const initialData: Divisi[] = [
-  { id: 1, nama: "Teknologi Informasi", kode: "TI", deskripsi: "Divisi yang berfokus pada pengembangan teknologi dan pemrograman.", jumlahKelas: 3, status: "aktif" },
-  { id: 2, nama: "Akuntansi", kode: "AK", deskripsi: "Divisi yang berfokus pada ilmu akuntansi dan keuangan.", jumlahKelas: 2, status: "aktif" },
-  { id: 3, nama: "Agama", kode: "AG", deskripsi: "Divisi yang berfokus pada ilmu-ilmu keagamaan Islam.", jumlahKelas: 4, status: "aktif" },
-  { id: 4, nama: "Bahasa Arab", kode: "BA", deskripsi: "Divisi khusus untuk penguasaan bahasa Arab fusha.", jumlahKelas: 2, status: "nonaktif" },
-]
-
 const emptyForm: Omit<Divisi, "id" | "jumlahKelas"> = { nama: "", kode: "", deskripsi: "", status: "aktif" }
 
 export default function DivisiPage() {
-  const [data, setData] = useState<Divisi[]>(initialData)
+  const [data, setData] = useState<Divisi[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
+
   const [search, setSearch] = useState("")
-  const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Divisi | null>(null)
   const [form, setForm] = useState<Omit<Divisi, "id" | "jumlahKelas">>(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const res = await api.DivisiAPI.getAll()
+      const dataArray = Array.isArray(res.data) ? res.data : (res.data?.data || [])
+      const mapped = dataArray.map((d: any) => ({
+        id: d.id,
+        nama: d.name,
+        kode: "-", // DB does not store kode
+        deskripsi: d.description || "",
+        jumlahKelas: d.classes ? d.classes.length : 0,
+        status: "aktif" // Default to active since DB lacks this
+      }))
+      setData(mapped)
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat data divisi")
+      toast.error("Gagal mengambil data divisi")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const statCards = [
     { label: "Total Divisi", value: data.length, icon: Layers, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
@@ -54,22 +80,46 @@ export default function DivisiPage() {
     d.nama.toLowerCase().includes(search.toLowerCase()) || d.kode.toLowerCase().includes(search.toLowerCase())
   )
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
   const openEdit = (d: Divisi) => { setEditTarget(d); setForm({ nama: d.nama, kode: d.kode, deskripsi: d.deskripsi, status: d.status }); setMenuOpen(null); setModalOpen(true) }
 
-  const handleSave = () => {
-    if (!form.nama || !form.kode) { toast.error("Nama dan kode divisi wajib diisi."); return }
-    if (editTarget) {
-      setData(prev => prev.map(d => d.id === editTarget.id ? { ...d, ...form } : d))
-      toast.success("Divisi berhasil diperbarui.")
-    } else {
-      setData(prev => [...prev, { id: Math.max(0, ...data.map(d => d.id)) + 1, jumlahKelas: 0, ...form }])
-      toast.success("Divisi berhasil ditambahkan.")
+  const handleSave = async () => {
+    if (!form.nama) { toast.error("Nama divisi wajib diisi."); return }
+    
+    setSaving(true)
+    try {
+      const payload = {
+        name: form.nama,
+        description: form.deskripsi
+      }
+
+      if (editTarget) {
+        await api.DivisiAPI.update(editTarget.id, payload)
+        toast.success("Divisi berhasil diperbarui.")
+      } else {
+        await api.DivisiAPI.create(payload)
+        toast.success("Divisi berhasil ditambahkan.")
+      }
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan data divisi.")
+    } finally {
+      setSaving(false)
     }
-    setModalOpen(false)
   }
 
-  const handleDelete = (id: number) => { setData(prev => prev.filter(d => d.id !== id)); setDeleteConfirm(null); setMenuOpen(null); toast.success("Divisi berhasil dihapus.") }
+  const handleDelete = async (id: string) => {
+    try {
+      await api.DivisiAPI.delete(id)
+      toast.success("Divisi berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus divisi.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -88,7 +138,7 @@ export default function DivisiPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
@@ -96,14 +146,24 @@ export default function DivisiPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input id="search-divisi" type="text" placeholder="Cari nama atau kode divisi..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+          <input id="search-divisi" type="text" placeholder="Cari nama divisi..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
         </div>
-        <button id="btn-tambah-divisi" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Tambah Divisi
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -117,7 +177,7 @@ export default function DivisiPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {!loading && filtered.length === 0 ? (
                 <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><Layers className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada divisi ditemukan.</td></tr>
               ) : filtered.map((d, idx) => (
                 <tr key={d.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
@@ -163,26 +223,10 @@ export default function DivisiPage() {
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="col-span-2">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Divisi <span className="text-red-500">*</span></label>
                   <input id="input-nama-divisi" type="text" placeholder="Teknologi Informasi" value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Kode <span className="text-red-500">*</span></label>
-                  <input id="input-kode-divisi" type="text" placeholder="TI" value={form.kode} onChange={e => setForm({ ...form, kode: e.target.value.toUpperCase() })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm font-mono outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
-                <Select value={form.status} onValueChange={v => setForm({ ...form, status: v as Divisi["status"] })}>
-                  <SelectTrigger id="input-status-divisi" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="aktif">Aktif</SelectItem>
-                    <SelectItem value="nonaktif">Non-Aktif</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Deskripsi</label>
@@ -190,8 +234,11 @@ export default function DivisiPage() {
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-divisi" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">{editTarget ? "Simpan Perubahan" : "Tambah"}</button>
+              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={saving}>Batal</button>
+              <button id="btn-simpan-divisi" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editTarget ? "Simpan Perubahan" : "Tambah"}
+              </button>
             </div>
           </div>
         </div>
@@ -206,8 +253,10 @@ export default function DivisiPage() {
             </div>
             <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus divisi ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-divisi" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={loading}>Batal</button>
+              <button id="btn-konfirm-hapus-divisi" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>

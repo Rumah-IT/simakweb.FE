@@ -2,7 +2,6 @@ import { useState } from "react"
 import { toast } from "sonner"
 import {
   BookOpen,
-  Plus,
   Search,
   Filter,
   MoreHorizontal,
@@ -27,68 +26,7 @@ interface Pelajaran {
   deskripsi: string
 }
 
-const initialData: Pelajaran[] = [
-  {
-    id: 1,
-    nama: "Pemrograman Web",
-    kode: "TK-101",
-    kategori: "teknologi",
-    kelas: "Kelas A",
-    pengajar: "Ust. Budi Santoso",
-    durasi: 90,
-    deskripsi: "Mempelajari HTML, CSS, JavaScript, dan framework modern.",
-  },
-  {
-    id: 2,
-    nama: "Basis Data",
-    kode: "TK-102",
-    kategori: "teknologi",
-    kelas: "Kelas B",
-    pengajar: "Ust. Andi Prasetyo",
-    durasi: 90,
-    deskripsi: "Desain database relasional dan penggunaan SQL.",
-  },
-  {
-    id: 3,
-    nama: "Fiqih",
-    kode: "AG-101",
-    kategori: "agama",
-    kelas: "Kelas A, B, C",
-    pengajar: "Ust. Ahmad Fauzi",
-    durasi: 60,
-    deskripsi: "Hukum Islam seputar ibadah dan muamalah sehari-hari.",
-  },
-  {
-    id: 4,
-    nama: "Akuntansi Dasar",
-    kode: "BS-101",
-    kategori: "bisnis",
-    kelas: "Kelas C",
-    pengajar: "Ust. Rizky Hidayat",
-    durasi: 75,
-    deskripsi: "Pengenalan siklus akuntansi dan laporan keuangan.",
-  },
-  {
-    id: 5,
-    nama: "Jaringan Komputer",
-    kode: "TK-103",
-    kategori: "teknologi",
-    kelas: "Kelas A",
-    pengajar: "Ust. Fajar Nugroho",
-    durasi: 90,
-    deskripsi: "Konsep jaringan, TCP/IP, dan keamanan jaringan.",
-  },
-  {
-    id: 6,
-    nama: "Bahasa Arab",
-    kode: "AG-102",
-    kategori: "agama",
-    kelas: "Kelas A, B, C",
-    pengajar: "Ust. Mahmud Yasin",
-    durasi: 60,
-    deskripsi: "Tata bahasa Arab dan percakapan dasar.",
-  },
-]
+
 
 const kategoriConfig: Record<
   Pelajaran["kategori"],
@@ -127,7 +65,7 @@ const emptyForm: Omit<Pelajaran, "id"> = {
 }
 
 export default function PelajaranPage() {
-  const [data, setData] = useState<Pelajaran[]>(initialData)
+  const [data, setData] = useState<Pelajaran[]>([])
   const [search, setSearch] = useState("")
   const [filterKategori, setFilterKategori] = useState<string>("semua")
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
@@ -176,12 +114,6 @@ export default function PelajaranPage() {
       filterKategori === "semua" || p.kategori === filterKategori
     return matchSearch && matchKategori
   })
-
-  const openCreate = () => {
-    setEditTarget(null)
-    setForm(emptyForm)
-    setModalOpen(true)
-  }
 
   const openEdit = (pelajaran: Pelajaran) => {
     setEditTarget(pelajaran)
@@ -287,14 +219,7 @@ export default function PelajaranPage() {
             </select>
           </div>
         </div>
-        <button
-          id="btn-tambah-pelajaran"
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          Tambah Pelajaran
-        </button>
+
       </div>
 
       <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">

@@ -1,35 +1,30 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
-  BarChart3,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  X,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Calendar,
-  User,
+  BarChart3, Search, MoreHorizontal,
+  Pencil, Trash2, X, Star, TrendingUp, TrendingDown,
+  Minus, Calendar, User, Loader2, AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
 interface Nilai {
-  id: number
-  santri: string
+  id: string
+  santriId: string
+  santriName: string
   nis: string
-  kelas: string
-  bulan: string
-  akademik: number
-  akhlak: number
-  kehadiran: number
+  classId: string
+  className: string
+  month: number
+  year: number
+  taskAvg: number
+  attitudeAvg: number
+  attendancePoin: number
+  maxAttendPoin: number
   rataRata: number
   predikat: "A" | "B" | "C" | "D"
-  catatan: string
+  notes: string
 }
 
 const getPredikat = (avg: number): Nilai["predikat"] => {
@@ -39,14 +34,10 @@ const getPredikat = (avg: number): Nilai["predikat"] => {
   return "D"
 }
 
-const calcAvg = (a: number, b: number, c: number) => Math.round((a + b + c) / 3)
-
-const initialData: Nilai[] = [
-  { id: 1, santri: "Ahmad Fauzi", nis: "2024001", kelas: "Kelas A – TI", bulan: "2026-04", akademik: 88, akhlak: 90, kehadiran: 95, rataRata: 91, predikat: "A", catatan: "Santri terbaik bulan ini." },
-  { id: 2, santri: "Siti Aisyah", nis: "2024002", kelas: "Kelas B – AK", bulan: "2026-04", akademik: 75, akhlak: 80, kehadiran: 85, rataRata: 80, predikat: "B", catatan: "Perlu peningkatan akademik." },
-  { id: 3, santri: "Budi Santoso", nis: "2024003", kelas: "Kelas A – TI", bulan: "2026-04", akademik: 60, akhlak: 70, kehadiran: 65, rataRata: 65, predikat: "C", catatan: "Sering absen. Perlu perhatian." },
-  { id: 4, santri: "Nur Halimah", nis: "2024004", kelas: "Kelas C – AG", bulan: "2026-04", akademik: 92, akhlak: 95, kehadiran: 98, rataRata: 95, predikat: "A", catatan: "Sangat berprestasi." },
-]
+const calcAvg = (task: number, attitude: number, attend: number, maxAttend: number) => {
+  const attendPercent = maxAttend ? (attend / maxAttend) * 100 : 0
+  return Math.round((task + attitude + attendPercent) / 3)
+}
 
 const predikatConfig: Record<Nilai["predikat"], string> = {
   A: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
@@ -55,17 +46,87 @@ const predikatConfig: Record<Nilai["predikat"], string> = {
   D: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 }
 
-const emptyForm: Omit<Nilai, "id" | "rataRata" | "predikat"> = { santri: "", nis: "", kelas: "", bulan: new Date().toISOString().slice(0, 7), akademik: 0, akhlak: 0, kehadiran: 0, catatan: "" }
+type FormState = {
+  santriId: string
+  classId: string
+  bulan: string // YYYY-MM format
+  taskAvg: number
+  attitudeAvg: number
+  attendancePoin: number
+  maxAttendPoin: number
+  notes: string
+}
+
+const currentYearMonth = new Date().toISOString().slice(0, 7)
+const emptyForm: FormState = { santriId: "", classId: "", bulan: currentYearMonth, taskAvg: 0, attitudeAvg: 0, attendancePoin: 0, maxAttendPoin: 100, notes: "" }
 
 export default function NilaiPage() {
-  const [data, setData] = useState<Nilai[]>(initialData)
+  const [data, setData] = useState<Nilai[]>([])
+  const [classesList, setClassesList] = useState<{id: string, nama: string}[]>([])
+  const [santriList, setSantriList] = useState<{id: string, nama: string, nis: string}[]>([])
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+
   const [search, setSearch] = useState("")
   const [filterPredikat, setFilterPredikat] = useState("semua")
-  const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Nilai | null>(null)
-  const [form, setForm] = useState<Omit<Nilai, "id" | "rataRata" | "predikat">>(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [form, setForm] = useState<FormState>(emptyForm)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [resScores, resClass, resSantri] = await Promise.all([
+        api.ScoreAPI.getAll(),
+        api.ClassAPI.getAll(),
+        api.SantriAPI.getAll()
+      ])
+
+      const classesArray = Array.isArray(resClass.data) ? resClass.data : (resClass.data?.data || [])
+      setClassesList(classesArray.map((c: any) => ({ id: c.id, nama: c.name })))
+
+      const santriArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
+      setSantriList(santriArray.map((s: any) => ({ id: s.id, nama: s.fullName, nis: s.santriProfile?.nis || "-" })))
+
+      const sArray = Array.isArray(resScores.data) ? resScores.data : (resScores.data?.data || [])
+      const mapped = sArray.map((s: any) => {
+        const rataRata = calcAvg(s.taskAvg || 0, s.attitudeAvg || 0, s.attendancePoin || 0, s.maxAttendPoin || 100)
+        return {
+          id: s.id,
+          santriId: s.santriId,
+          santriName: s.santri?.fullName || "-",
+          nis: s.santri?.nis || "-",
+          classId: s.classId,
+          className: s.class?.name || "-",
+          month: s.month,
+          year: s.year,
+          taskAvg: s.taskAvg || 0,
+          attitudeAvg: s.attitudeAvg || 0,
+          attendancePoin: s.attendancePoin || 0,
+          maxAttendPoin: s.maxAttendPoin || 100,
+          rataRata,
+          predikat: getPredikat(rataRata),
+          notes: s.notes || ""
+        }
+      })
+      setData(mapped)
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat rekap nilai")
+      toast.error("Gagal memuat rekap nilai")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const avgAll = data.length ? Math.round(data.reduce((a, d) => a + d.rataRata, 0) / data.length) : 0
   const statCards = [
@@ -76,38 +137,90 @@ export default function NilaiPage() {
   ]
 
   const filtered = data.filter(n => {
-    const matchSearch = n.santri.toLowerCase().includes(search.toLowerCase()) || n.kelas.toLowerCase().includes(search.toLowerCase())
+    const q = search.toLowerCase()
+    const matchSearch = n.santriName.toLowerCase().includes(q) || n.className.toLowerCase().includes(q)
     const matchPred = filterPredikat === "semua" || n.predikat === filterPredikat
     return matchSearch && matchPred
   })
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
-  const openEdit = (n: Nilai) => { setEditTarget(n); setForm({ santri: n.santri, nis: n.nis, kelas: n.kelas, bulan: n.bulan, akademik: n.akademik, akhlak: n.akhlak, kehadiran: n.kehadiran, catatan: n.catatan }); setMenuOpen(null); setModalOpen(true) }
-
-  const handleSave = () => {
-    if (!form.santri || !form.kelas || !form.bulan) { toast.error("Harap lengkapi semua field wajib."); return }
-    const avg = calcAvg(form.akademik, form.akhlak, form.kehadiran)
-    const pred = getPredikat(avg)
-    if (editTarget) {
-      setData(prev => prev.map(n => n.id === editTarget.id ? { ...n, ...form, rataRata: avg, predikat: pred } : n))
-      toast.success("Nilai berhasil diperbarui.")
-    } else {
-      setData(prev => [...prev, { id: Math.max(0, ...data.map(n => n.id)) + 1, ...form, rataRata: avg, predikat: pred }])
-      toast.success("Evaluasi nilai berhasil disimpan.")
-    }
-    setModalOpen(false)
+  const openEdit = (n: Nilai) => { 
+    setEditTarget(n); 
+    const monthStr = n.month.toString().padStart(2, "0")
+    setForm({ 
+      santriId: n.santriId, 
+      classId: n.classId, 
+      bulan: `${n.year}-${monthStr}`, 
+      taskAvg: n.taskAvg, 
+      attitudeAvg: n.attitudeAvg, 
+      attendancePoin: n.attendancePoin,
+      maxAttendPoin: n.maxAttendPoin,
+      notes: n.notes 
+    }); 
+    setMenuOpen(null); 
+    setModalOpen(true) 
   }
 
-  const handleDelete = (id: number) => { setData(prev => prev.filter(n => n.id !== id)); setDeleteConfirm(null); setMenuOpen(null); toast.success("Rekap nilai berhasil dihapus.") }
+  const handleSave = async () => {
+    if (!form.santriId || !form.classId || !form.bulan) { 
+      toast.error("Harap lengkapi semua field wajib.")
+      return 
+    }
+    
+    setSaving(true)
+    try {
+      const [yearStr, monthStr] = form.bulan.split("-")
+      const payload = {
+        santriId: form.santriId,
+        classId: form.classId,
+        year: parseInt(yearStr),
+        month: parseInt(monthStr),
+        taskAvg: form.taskAvg,
+        attitudeAvg: form.attitudeAvg,
+        attendancePoin: form.attendancePoin,
+        maxAttendPoin: form.maxAttendPoin,
+        notes: form.notes
+      }
 
-  const ScoreBar = ({ value }: { value: number }) => (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
-        <div className={`h-full rounded-full ${value >= 85 ? "bg-emerald-500" : value >= 70 ? "bg-sky-500" : value >= 55 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${value}%` }} />
+      if (editTarget) {
+        await api.ScoreAPI.update(editTarget.id, payload)
+        toast.success("Nilai berhasil diperbarui.")
+      } else {
+        await api.ScoreAPI.create(payload)
+        toast.success("Evaluasi nilai berhasil disimpan.")
+      }
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan evaluasi nilai.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => { 
+    try {
+      await api.ScoreAPI.delete(id)
+      toast.success("Rekap nilai berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus rekap nilai.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
+  }
+
+  const ScoreBar = ({ value, max = 100 }: { value: number, max?: number }) => {
+    const pct = max > 0 ? (value / max) * 100 : 0
+    return (
+      <div className="flex items-center gap-2">
+        <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+          <div className={`h-full rounded-full ${pct >= 85 ? "bg-emerald-500" : pct >= 70 ? "bg-sky-500" : pct >= 55 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${Math.min(100, pct)}%` }} />
+        </div>
+        <span className="text-xs font-mono">{value}</span>
       </div>
-      <span className="text-xs font-mono">{value}</span>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -126,7 +239,7 @@ export default function NilaiPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
@@ -150,12 +263,22 @@ export default function NilaiPage() {
             </SelectContent>
           </Select>
         </div>
-        <button id="btn-tambah-nilai" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Input Nilai
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -172,35 +295,38 @@ export default function NilaiPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {!loading && filtered.length === 0 ? (
                 <tr><td colSpan={9} className="px-4 py-12 text-center text-muted-foreground"><BarChart3 className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada rekap nilai ditemukan.</td></tr>
-              ) : filtered.map((n, idx) => (
-                <tr key={n.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
-                  <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-muted-foreground" /><div><div className="font-medium">{n.santri}</div><div className="text-xs text-muted-foreground">{n.kelas}</div></div></div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-muted-foreground" />{new Date(n.bulan + "-01").toLocaleDateString("id-ID", { month: "long", year: "numeric" })}</div>
-                  </td>
-                  <td className="px-4 py-3"><ScoreBar value={n.akademik} /></td>
-                  <td className="px-4 py-3"><ScoreBar value={n.akhlak} /></td>
-                  <td className="px-4 py-3"><ScoreBar value={n.kehadiran} /></td>
-                  <td className="px-4 py-3 font-bold">{n.rataRata}</td>
-                  <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${predikatConfig[n.predikat]}`}>{n.predikat}</span></td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="relative inline-block">
-                      <button id={`menu-nilai-${n.id}`} onClick={() => setMenuOpen(menuOpen === n.id ? null : n.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
-                      {menuOpen === n.id && (
-                        <div className="absolute right-0 top-8 z-20 min-w-[130px] rounded-lg border bg-popover shadow-lg">
-                          <button onClick={() => openEdit(n)} className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"><Pencil className="h-3.5 w-3.5" />Edit</button>
-                          <button onClick={() => { setDeleteConfirm(n.id); setMenuOpen(null) }} className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"><Trash2 className="h-3.5 w-3.5" />Hapus</button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              ) : filtered.map((n, idx) => {
+                const monthStr = n.month.toString().padStart(2, "0")
+                return (
+                  <tr key={n.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
+                    <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-muted-foreground" /><div><div className="font-medium">{n.santriName}</div><div className="text-xs text-muted-foreground">{n.className}</div></div></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-muted-foreground" />{new Date(`${n.year}-${monthStr}-01`).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}</div>
+                    </td>
+                    <td className="px-4 py-3"><ScoreBar value={n.taskAvg} /></td>
+                    <td className="px-4 py-3"><ScoreBar value={n.attitudeAvg} /></td>
+                    <td className="px-4 py-3"><ScoreBar value={n.attendancePoin} max={n.maxAttendPoin} /></td>
+                    <td className="px-4 py-3 font-bold">{n.rataRata}</td>
+                    <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${predikatConfig[n.predikat]}`}>{n.predikat}</span></td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="relative inline-block">
+                        <button id={`menu-nilai-${n.id}`} onClick={() => setMenuOpen(menuOpen === n.id ? null : n.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
+                        {menuOpen === n.id && (
+                          <div className="absolute right-0 top-8 z-20 min-w-[130px] rounded-lg border bg-popover shadow-lg">
+                            <button onClick={() => openEdit(n)} className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"><Pencil className="h-3.5 w-3.5" />Edit</button>
+                            <button onClick={() => { setDeleteConfirm(n.id); setMenuOpen(null) }} className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"><Trash2 className="h-3.5 w-3.5" />Hapus</button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -213,55 +339,66 @@ export default function NilaiPage() {
               <h2 className="text-lg font-bold">{editTarget ? "Edit Nilai" : "Input Nilai Bulanan"}</h2>
               <button onClick={() => setModalOpen(false)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Santri <span className="text-red-500">*</span></label>
-                  <input id="input-santri-nilai" type="text" placeholder="Ahmad Fauzi" value={form.santri} onChange={e => setForm({ ...form, santri: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
+                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v })}>
+                    <SelectTrigger id="input-santri-nilai" className="w-full">
+                      <SelectValue placeholder="Pilih santri..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {santriList.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} ({s.nis})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">NIS</label>
-                  <input id="input-nis-nilai" type="text" placeholder="2024001" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <input id="input-kelas-nilai" type="text" placeholder="Kelas A – TI" value={form.kelas} onChange={e => setForm({ ...form, kelas: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v })}>
+                    <SelectTrigger id="input-kelas-nilai" className="w-full">
+                      <SelectValue placeholder="Pilih kelas..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Bulan <span className="text-red-500">*</span></label>
-                  <input id="input-bulan-nilai" type="month" value={form.bulan} onChange={e => setForm({ ...form, bulan: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Bulan & Tahun <span className="text-red-500">*</span></label>
+                <input id="input-bulan-nilai" type="month" value={form.bulan} onChange={e => setForm({ ...form, bulan: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Akademik (0–100)</label>
-                  <input id="input-akademik-nilai" type="number" min={0} max={100} value={form.akademik} onChange={e => setForm({ ...form, akademik: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Akademik / Tugas (0–100)</label>
+                  <input id="input-akademik-nilai" type="number" min={0} max={100} value={form.taskAvg} onChange={e => setForm({ ...form, taskAvg: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Akhlak (0–100)</label>
-                  <input id="input-akhlak-nilai" type="number" min={0} max={100} value={form.akhlak} onChange={e => setForm({ ...form, akhlak: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <input id="input-akhlak-nilai" type="number" min={0} max={100} value={form.attitudeAvg} onChange={e => setForm({ ...form, attitudeAvg: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Kehadiran (0–100)</label>
-                  <input id="input-kehadiran-nilai" type="number" min={0} max={100} value={form.kehadiran} onChange={e => setForm({ ...form, kehadiran: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Kehadiran ({`Max: ${form.maxAttendPoin}`})</label>
+                  <input id="input-kehadiran-nilai" type="number" min={0} max={form.maxAttendPoin} value={form.attendancePoin} onChange={e => setForm({ ...form, attendancePoin: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
               <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm flex items-center gap-2">
                 <Minus className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Rata-rata otomatis: </span>
-                <strong>{calcAvg(form.akademik, form.akhlak, form.kehadiran)}</strong>
-                <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${predikatConfig[getPredikat(calcAvg(form.akademik, form.akhlak, form.kehadiran))]}`}>{getPredikat(calcAvg(form.akademik, form.akhlak, form.kehadiran))}</span>
+                <strong>{calcAvg(form.taskAvg, form.attitudeAvg, form.attendancePoin, form.maxAttendPoin)}</strong>
+                <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${predikatConfig[getPredikat(calcAvg(form.taskAvg, form.attitudeAvg, form.attendancePoin, form.maxAttendPoin))]}`}>{getPredikat(calcAvg(form.taskAvg, form.attitudeAvg, form.attendancePoin, form.maxAttendPoin))}</span>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Catatan</label>
-                <input id="input-catatan-nilai" type="text" placeholder="Catatan opsional..." value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Catatan Tambahan</label>
+                <input id="input-catatan-nilai" type="text" placeholder="Catatan opsional..." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-nilai" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">{editTarget ? "Simpan Perubahan" : "Simpan"}</button>
+              <button onClick={() => setModalOpen(false)} disabled={saving} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
+              <button id="btn-simpan-nilai" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editTarget ? "Simpan Perubahan" : "Simpan"}
+              </button>
             </div>
           </div>
         </div>
@@ -276,8 +413,10 @@ export default function NilaiPage() {
             </div>
             <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus rekap nilai ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-nilai" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} disabled={loading} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
+              <button id="btn-konfirm-hapus-nilai" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>

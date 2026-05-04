@@ -1,14 +1,16 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
   CalendarCheck, Plus, Search, MoreHorizontal,
   Pencil, Trash2, X, CheckCircle2, XCircle, Clock,
   AlertCircle, Calendar, Users, Image, StickyNote,
+  Loader2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
-type AttendanceStatus = "HADIR" | "IZIN" | "SAKIT" | "ALPHA"
+type AttendanceStatus = "HADIR" | "IZIN" | "SAKIT" | "ALFA"
 
 interface Attendance {
   id: string
@@ -25,41 +27,13 @@ interface Attendance {
   createdAt: string
 }
 
-const KELAS_LIST = [
-  { id: "cls-1", nama: "Kelas A – TI" },
-  { id: "cls-2", nama: "Kelas B – AK" },
-  { id: "cls-3", nama: "Kelas C – AG" },
-]
-
-const SANTRI_LIST = [
-  { id: "usr-1", nama: "Ahmad Fauzi",    nis: "2024001" },
-  { id: "usr-2", nama: "Siti Aisyah",    nis: "2024002" },
-  { id: "usr-3", nama: "Budi Santoso",   nis: "2024003" },
-  { id: "usr-4", nama: "Nur Halimah",    nis: "2024004" },
-  { id: "usr-5", nama: "Rizki Ramadhan", nis: "2024005" },
-]
-
-const MENTOR_LIST = [
-  { id: "mtr-1", nama: "Ust. Hasan" },
-  { id: "mtr-2", nama: "Ust. Ridwan" },
-  { id: "mtr-3", nama: "Ust. Salim" },
-]
-
 const today = new Date().toISOString().split("T")[0]
-
-const initialData: Attendance[] = [
-  { id: "att-1", classId: "cls-1", className: "Kelas A – TI", santriId: "usr-1", santriName: "Ahmad Fauzi",    mentorId: "mtr-1", mentorName: "Ust. Hasan",  date: today, status: "HADIR", notes: "",                    imageUrl: "", createdAt: today },
-  { id: "att-2", classId: "cls-2", className: "Kelas B – AK", santriId: "usr-2", santriName: "Siti Aisyah",    mentorId: "mtr-2", mentorName: "Ust. Ridwan", date: today, status: "IZIN",  notes: "Keperluan keluarga",  imageUrl: "", createdAt: today },
-  { id: "att-3", classId: "cls-1", className: "Kelas A – TI", santriId: "usr-3", santriName: "Budi Santoso",   mentorId: "mtr-1", mentorName: "Ust. Hasan",  date: today, status: "SAKIT", notes: "Demam",              imageUrl: "", createdAt: today },
-  { id: "att-4", classId: "cls-3", className: "Kelas C – AG", santriId: "usr-4", santriName: "Nur Halimah",    mentorId: "mtr-3", mentorName: "Ust. Salim",  date: today, status: "HADIR", notes: "",                    imageUrl: "", createdAt: today },
-  { id: "att-5", classId: "cls-2", className: "Kelas B – AK", santriId: "usr-5", santriName: "Rizki Ramadhan", mentorId: "mtr-2", mentorName: "Ust. Ridwan", date: today, status: "ALPHA", notes: "",                    imageUrl: "", createdAt: today },
-]
 
 const STATUS_CFG: Record<AttendanceStatus, { label: string; className: string; icon: React.ReactNode }> = {
   HADIR: { label: "Hadir", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", icon: <CheckCircle2 className="h-3 w-3" /> },
   IZIN:  { label: "Izin",  className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",                icon: <Clock       className="h-3 w-3" /> },
   SAKIT: { label: "Sakit", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",        icon: <AlertCircle className="h-3 w-3" /> },
-  ALPHA: { label: "Alpha", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",                icon: <XCircle     className="h-3 w-3" /> },
+  ALFA: { label: "Alpha", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",                icon: <XCircle     className="h-3 w-3" /> },
 }
 
 type FormState = Omit<Attendance, "id" | "className" | "santriName" | "mentorName" | "createdAt">
@@ -73,13 +47,21 @@ function isDuplicate(data: Attendance[], form: FormState, excludeId?: string) {
   return data.some(a =>
     a.classId === form.classId &&
     a.santriId === form.santriId &&
-    a.date === form.date &&
+    a.date.split("T")[0] === form.date &&
     a.id !== excludeId
   )
 }
 
 export default function AbsensiPage() {
-  const [data, setData] = useState<Attendance[]>(initialData)
+  const [data, setData] = useState<Attendance[]>([])
+  const [classesList, setClassesList] = useState<{id: string, nama: string}[]>([])
+  const [santriList, setSantriList] = useState<{id: string, nama: string, nis: string}[]>([])
+  const [mentorList, setMentorList] = useState<{id: string, nama: string}[]>([])
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
+
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState<"semua" | AttendanceStatus>("semua")
   const [filterClass, setFilterClass] = useState("semua")
@@ -89,11 +71,60 @@ export default function AbsensiPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [resAtt, resClass, resSantri, resMentor] = await Promise.all([
+        api.AttendanceAPI.getAll(),
+        api.ClassAPI.getAll(),
+        api.SantriAPI.getAll(),
+        api.AuthAPI.getMentors(),
+      ])
+
+      const classesArray = Array.isArray(resClass.data) ? resClass.data : (resClass.data?.data || [])
+      setClassesList(classesArray.map((c: any) => ({ id: c.id, nama: c.name })))
+
+      const santriArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
+      setSantriList(santriArray.map((s: any) => ({ id: s.id, nama: s.fullName, nis: s.santriProfile?.nis || "-" })))
+
+      const mentorArray = Array.isArray(resMentor.data) ? resMentor.data : (resMentor.data?.data || [])
+      setMentorList(mentorArray.map((m: any) => ({ id: m.id, nama: m.fullName })))
+
+      const attArray = Array.isArray(resAtt.data) ? resAtt.data : (resAtt.data?.data || [])
+      const mapped = attArray.map((a: any) => ({
+        id: a.id,
+        classId: a.classId,
+        className: a.class?.name || "-",
+        santriId: a.santriId,
+        santriName: a.santri?.fullName || "-",
+        mentorId: a.mentorId,
+        mentorName: a.mentor?.fullName || "-",
+        date: a.date.split("T")[0],
+        status: a.status as AttendanceStatus,
+        notes: a.notes || "",
+        imageUrl: a.imageUrl || "",
+        createdAt: a.createdAt,
+      }))
+      setData(mapped)
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat rekap absensi")
+      toast.error("Gagal mengambil rekap absensi")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
   const statCards = [
     { label: "Total Rekap",  value: data.length,                                         icon: Users,        color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
     { label: "Hadir",        value: data.filter(d => d.status === "HADIR").length,        icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
     { label: "Izin / Sakit", value: data.filter(d => d.status === "IZIN" || d.status === "SAKIT").length, icon: Clock, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/40" },
-    { label: "Alpha",        value: data.filter(d => d.status === "ALPHA").length,        icon: XCircle,      color: "text-red-600",     bg: "bg-red-50 dark:bg-red-950/40" },
+    { label: "Alpha",        value: data.filter(d => d.status === "ALFA").length,        icon: XCircle,      color: "text-red-600",     bg: "bg-red-50 dark:bg-red-950/40" },
   ]
 
   const filtered = data.filter(a => {
@@ -113,7 +144,7 @@ export default function AbsensiPage() {
     setModalOpen(true)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.classId || !form.santriId || !form.mentorId || !form.date) {
       toast.error("Kelas, santri, mentor, dan tanggal wajib diisi.")
       return
@@ -123,33 +154,45 @@ export default function AbsensiPage() {
       return
     }
 
-    const kelas   = KELAS_LIST.find(k => k.id === form.classId)
-    const santri  = SANTRI_LIST.find(s => s.id === form.santriId)
-    const mentor  = MENTOR_LIST.find(m => m.id === form.mentorId)
+    setSaving(true)
+    try {
+      const payload = {
+        classId: form.classId,
+        santriId: form.santriId,
+        mentorId: form.mentorId,
+        date: new Date(form.date).toISOString(),
+        status: form.status,
+        notes: form.notes,
+        imageUrl: form.imageUrl,
+      }
 
-    if (editTarget) {
-      setData(prev => prev.map(a => a.id === editTarget.id
-        ? { ...a, ...form, className: kelas?.nama ?? "", santriName: santri?.nama ?? "", mentorName: mentor?.nama ?? "" }
-        : a
-      ))
-      toast.success("Absensi berhasil diperbarui.")
-    } else {
-      const newId = `att-${Date.now()}`
-      setData(prev => [...prev, {
-        id: newId, ...form,
-        className: kelas?.nama ?? "", santriName: santri?.nama ?? "", mentorName: mentor?.nama ?? "",
-        createdAt: new Date().toISOString(),
-      }])
-      toast.success("Absensi berhasil dicatat.")
+      if (editTarget) {
+        await api.AttendanceAPI.update(editTarget.id, payload)
+        toast.success("Absensi berhasil diperbarui.")
+      } else {
+        await api.AttendanceAPI.submitAttendance(payload)
+        toast.success("Absensi berhasil dicatat.")
+      }
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan absensi.")
+    } finally {
+      setSaving(false)
     }
-    setModalOpen(false)
   }
 
-  const handleDelete = (id: string) => {
-    setData(prev => prev.filter(a => a.id !== id))
-    setDeleteConfirm(null)
-    setMenuOpen(null)
-    toast.success("Rekap absensi berhasil dihapus.")
+  const handleDelete = async (id: string) => {
+    try {
+      await api.AttendanceAPI.delete(id)
+      toast.success("Rekap absensi berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus absensi.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
   }
 
   return (
@@ -171,7 +214,7 @@ export default function AbsensiPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
@@ -191,7 +234,7 @@ export default function AbsensiPage() {
               <SelectItem value="HADIR">Hadir</SelectItem>
               <SelectItem value="IZIN">Izin</SelectItem>
               <SelectItem value="SAKIT">Sakit</SelectItem>
-              <SelectItem value="ALPHA">Alpha</SelectItem>
+              <SelectItem value="ALFA">Alpha</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterClass} onValueChange={setFilterClass}>
@@ -200,16 +243,26 @@ export default function AbsensiPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="semua">Semua Kelas</SelectItem>
-              {KELAS_LIST.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
+              {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        <button id="btn-catat-absensi" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Catat Absensi
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -220,12 +273,12 @@ export default function AbsensiPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {!loading && filtered.length === 0 ? (
                 <tr><td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                   <CalendarCheck className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada rekap absensi.
                 </td></tr>
               ) : filtered.map((a, idx) => {
-                const cfg = STATUS_CFG[a.status]
+                const cfg = STATUS_CFG[a.status] || STATUS_CFG.ALFA // fallback
                 return (
                   <tr key={a.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
@@ -279,7 +332,7 @@ export default function AbsensiPage() {
               <button onClick={() => setModalOpen(false)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
@@ -288,7 +341,7 @@ export default function AbsensiPage() {
                       <SelectValue placeholder="Pilih kelas..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {KELAS_LIST.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
+                      {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -299,7 +352,7 @@ export default function AbsensiPage() {
                       <SelectValue placeholder="Pilih santri..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {SANTRI_LIST.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} ({s.nis})</SelectItem>)}
+                      {santriList.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} ({s.nis})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -313,7 +366,7 @@ export default function AbsensiPage() {
                       <SelectValue placeholder="Pilih mentor..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {MENTOR_LIST.map(m => <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>)}
+                      {mentorList.map(m => <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -326,7 +379,7 @@ export default function AbsensiPage() {
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Status Kehadiran</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {(["HADIR", "IZIN", "SAKIT", "ALPHA"] as AttendanceStatus[]).map(s => (
+                  {(["HADIR", "IZIN", "SAKIT", "ALFA"] as AttendanceStatus[]).map(s => (
                     <button key={s} onClick={() => setForm({ ...form, status: s })} className={`rounded-lg border py-2 text-xs font-medium transition ${form.status === s ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
                       {STATUS_CFG[s].label}
                     </button>
@@ -357,8 +410,9 @@ export default function AbsensiPage() {
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-absensi" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">
+              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={saving}>Batal</button>
+              <button id="btn-simpan-absensi" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                 {editTarget ? "Simpan Perubahan" : "Catat"}
               </button>
             </div>
@@ -375,8 +429,10 @@ export default function AbsensiPage() {
             </div>
             <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus rekap absensi ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-absensi" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={loading}>Batal</button>
+              <button id="btn-konfirm-hapus-absensi" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>

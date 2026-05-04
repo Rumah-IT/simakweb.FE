@@ -1,9 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import {
   Users,
-  Plus,
   Search,
   MoreHorizontal,
   Pencil,
@@ -14,13 +13,17 @@ import {
   GraduationCap,
   Phone,
   ExternalLink,
+  Loader2,
+  AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import api from "@/services/api"
 
 interface Santri {
-  id: number
+  id: string
   nama: string
+  email: string
   nis: string
   kelas: string
   divisi: string
@@ -29,32 +32,65 @@ interface Santri {
   alamat: string
 }
 
-const initialData: Santri[] = [
-  { id: 1, nama: "Ahmad Fauzi", nis: "2024001", kelas: "Kelas A", divisi: "Teknologi Informasi", status: "aktif", telepon: "08111000001", alamat: "Jl. Merdeka No. 1" },
-  { id: 2, nama: "Siti Aisyah", nis: "2024002", kelas: "Kelas B", divisi: "Akuntansi", status: "aktif", telepon: "08111000002", alamat: "Jl. Sudirman No. 5" },
-  { id: 3, nama: "Budi Santoso", nis: "2024003", kelas: "Kelas A", divisi: "Teknologi Informasi", status: "nonaktif", telepon: "08111000003", alamat: "Jl. Pahlawan No. 10" },
-  { id: 4, nama: "Nur Halimah", nis: "2024004", kelas: "Kelas C", divisi: "Agama", status: "aktif", telepon: "08111000004", alamat: "Jl. Diponegoro No. 7" },
-  { id: 5, nama: "Rizki Ramadhan", nis: "2023010", kelas: "Kelas B", divisi: "Akuntansi", status: "lulus", telepon: "08111000005", alamat: "Jl. Gajah Mada No. 3" },
-]
-
 const statusConfig = {
   aktif: { label: "Aktif", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", icon: <UserCheck className="h-3 w-3" /> },
   nonaktif: { label: "Non-Aktif", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300", icon: <UserX className="h-3 w-3" /> },
   lulus: { label: "Lulus", className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300", icon: <GraduationCap className="h-3 w-3" /> },
 }
 
-const emptyForm: Omit<Santri, "id"> = { nama: "", nis: "", kelas: "", divisi: "", status: "aktif", telepon: "", alamat: "" }
+const emptyForm: Omit<Santri, "id"> & { password?: string } = { nama: "", email: "", nis: "", kelas: "", divisi: "", status: "aktif", telepon: "", alamat: "", password: "" }
+
+interface SantriFormState extends Omit<Santri, "id"> {
+  password?: string;
+  photoFile: File | null;
+}
+const initialFormState: SantriFormState = { ...emptyForm, photoFile: null };
 
 export default function SantriPage() {
   const navigate = useNavigate()
-  const [data, setData] = useState<Santri[]>(initialData)
+  const [data, setData] = useState<Santri[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState("semua")
-  const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Santri | null>(null)
-  const [form, setForm] = useState<Omit<Santri, "id">>(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [form, setForm] = useState<SantriFormState>(initialFormState)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const res = await api.SantriAPI.getAll()
+      const dataArray = Array.isArray(res.data) ? res.data : (res.data?.data || [])
+      const mapped = dataArray.map((u: any) => ({
+        id: u.id,
+        nama: u.fullName,
+        email: u.email,
+        status: u.isActive ? "aktif" : "nonaktif",
+        nis: u.santriProfile?.nis || "-", 
+        kelas: u.santriProfile?.classId || "-",
+        divisi: "-", 
+        telepon: u.santriProfile?.phone || u.phone || "-",
+        alamat: u.santriProfile?.address || "-"
+      }))
+      setData(mapped)
+      setError("")
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || "Gagal memuat data santri")
+      toast.error("Gagal mengambil data santri")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const statCards = [
     { label: "Total Santri", value: data.length, icon: Users, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
@@ -64,27 +100,57 @@ export default function SantriPage() {
   ]
 
   const filtered = data.filter(s => {
-    const matchSearch = s.nama.toLowerCase().includes(search.toLowerCase()) || s.nis.includes(search) || s.kelas.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = s.nama.toLowerCase().includes(search.toLowerCase()) || s.nis.includes(search) || s.kelas.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase())
     const matchStatus = filterStatus === "semua" || s.status === filterStatus
     return matchSearch && matchStatus
   })
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }
-  const openEdit = (s: Santri) => { setEditTarget(s); setForm({ nama: s.nama, nis: s.nis, kelas: s.kelas, divisi: s.divisi, status: s.status, telepon: s.telepon, alamat: s.alamat }); setMenuOpen(null); setModalOpen(true) }
+  const openEdit = (s: Santri) => { setEditTarget(s); setForm({ nama: s.nama, email: s.email, nis: s.nis, kelas: s.kelas, divisi: s.divisi, status: s.status, telepon: s.telepon, alamat: s.alamat, photoFile: null }); setMenuOpen(null); setModalOpen(true) }
 
-  const handleSave = () => {
-    if (!form.nama || !form.nis || !form.kelas || !form.divisi) { toast.error("Harap lengkapi semua field wajib."); return }
-    if (editTarget) {
-      setData(prev => prev.map(s => s.id === editTarget.id ? { ...s, ...form } : s))
-      toast.success("Data santri berhasil diperbarui.")
-    } else {
-      setData(prev => [...prev, { id: Math.max(0, ...data.map(s => s.id)) + 1, ...form }])
-      toast.success("Santri berhasil ditambahkan.")
+  const handleSave = async () => {
+    if (!form.nama || !form.email) { toast.error("Nama dan Email wajib diisi."); return }
+    if (!editTarget && !form.password) { toast.error("Password wajib diisi untuk user baru."); return }
+    if (!editTarget && !form.photoFile) { toast.error("Foto wajib diunggah untuk user baru."); return }
+    
+    setSaving(true)
+    try {
+      const formData = new FormData();
+      formData.append("fullName", form.nama);
+      formData.append("email", form.email);
+      formData.append("role", "SANTRI");
+      if (form.telepon) formData.append("phone", form.telepon);
+      if (form.alamat) formData.append("address", form.alamat);
+      if (form.photoFile) formData.append("photoUrl", form.photoFile);
+
+      if (editTarget) {
+        await api.SantriAPI.update(editTarget.id, formData)
+        toast.success("Data santri berhasil diperbarui.")
+      } else {
+        if (form.password) formData.append("password", form.password);
+        await api.SantriAPI.create(formData)
+        toast.success("Santri berhasil ditambahkan.")
+      }
+      setModalOpen(false)
+      fetchData() // Refresh data
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat menyimpan data.")
+    } finally {
+      setSaving(false)
     }
-    setModalOpen(false)
   }
 
-  const handleDelete = (id: number) => { setData(prev => prev.filter(s => s.id !== id)); setDeleteConfirm(null); setMenuOpen(null); toast.success("Santri berhasil dihapus.") }
+  const handleDelete = async (id: string) => {
+    try {
+      await api.SantriAPI.delete(id)
+      toast.success("Santri berhasil dihapus.")
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus santri.")
+    } finally {
+      setDeleteConfirm(null)
+      setMenuOpen(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -103,7 +169,7 @@ export default function SantriPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{card.value}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
@@ -112,7 +178,7 @@ export default function SantriPage() {
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input id="search-santri" type="text" placeholder="Cari nama, NIS, kelas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+            <input id="search-santri" type="text" placeholder="Cari nama, email, kelas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger id="filter-status-santri" className="w-36">
@@ -126,21 +192,30 @@ export default function SantriPage() {
             </SelectContent>
           </Select>
         </div>
-        <button id="btn-tambah-santri" onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95">
-          <Plus className="h-4 w-4" /> Tambah Santri
-        </button>
+
       </div>
 
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
+      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 text-center px-4">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+            <p className="text-sm font-medium">{error}</p>
+            <button onClick={fetchData} className="mt-4 rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Coba Lagi</button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">#</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama & Email</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NIS</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kelas</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Divisi</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kelas / Divisi</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Telepon</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Wali</th>
@@ -148,8 +223,8 @@ export default function SantriPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-12 text-center text-muted-foreground"><Users className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada santri ditemukan.</td></tr>
+              {!loading && filtered.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground"><Users className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada santri ditemukan.</td></tr>
               ) : filtered.map((s, idx) => {
                 const cfg = statusConfig[s.status]
                 return (
@@ -164,10 +239,13 @@ export default function SantriPage() {
                         <span className="font-medium">{s.nama}</span>
                         <ExternalLink className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
+                      <div className="text-xs text-muted-foreground">{s.email}</div>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{s.nis}</td>
-                    <td className="px-4 py-3">{s.kelas}</td>
-                    <td className="px-4 py-3">{s.divisi}</td>
+                    <td className="px-4 py-3">
+                      <div>{s.kelas}</div>
+                      <div className="text-xs text-muted-foreground">{s.divisi}</div>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-muted-foreground" />{s.telepon}</div>
                     </td>
@@ -206,34 +284,32 @@ export default function SantriPage() {
               <h2 className="text-lg font-bold">{editTarget ? "Edit Santri" : "Tambah Santri"}</h2>
               <button onClick={() => setModalOpen(false)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Nama Lengkap <span className="text-red-500">*</span></label>
                   <input id="input-nama-santri" type="text" placeholder="Ahmad Fauzi" value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">NIS <span className="text-red-500">*</span></label>
-                  <input id="input-nis-santri" type="text" placeholder="2024001" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Email <span className="text-red-500">*</span></label>
+                  <input id="input-email-santri" type="email" placeholder="email@contoh.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              
+              {!editTarget && (
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <input id="input-kelas-santri" type="text" placeholder="Kelas A" value={form.kelas} onChange={e => setForm({ ...form, kelas: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Password <span className="text-red-500">*</span></label>
+                  <input id="input-password-santri" type="password" placeholder="Min. 6 karakter" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Divisi <span className="text-red-500">*</span></label>
-                  <input id="input-divisi-santri" type="text" placeholder="Teknologi Informasi" value={form.divisi} onChange={e => setForm({ ...form, divisi: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
-                </div>
-              </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Telepon</label>
                   <input id="input-telepon-santri" type="text" placeholder="0811xxxxxxx" value={form.telepon} onChange={e => setForm({ ...form, telepon: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Status Aktif (Mock)</label>
                   <Select value={form.status} onValueChange={v => setForm({ ...form, status: v as Santri["status"] })}>
                     <SelectTrigger id="input-status-santri" className="w-full">
                       <SelectValue />
@@ -250,10 +326,17 @@ export default function SantriPage() {
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Alamat</label>
                 <textarea id="input-alamat-santri" rows={2} placeholder="Jl. Merdeka No. 1..." value={form.alamat} onChange={e => setForm({ ...form, alamat: e.target.value })} className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
               </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Foto Profil {editTarget ? "(Opsional)" : <span className="text-red-500">*</span>}</label>
+                <input id="input-foto-santri" type="file" accept="image/*" onChange={e => setForm({ ...form, photoFile: e.target.files?.[0] || null })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+              </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-simpan-santri" onClick={handleSave} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90">{editTarget ? "Simpan Perubahan" : "Tambah"}</button>
+              <button onClick={() => setModalOpen(false)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={saving}>Batal</button>
+              <button id="btn-simpan-santri" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editTarget ? "Simpan Perubahan" : "Tambah"}
+              </button>
             </div>
           </div>
         </div>
@@ -268,8 +351,10 @@ export default function SantriPage() {
             </div>
             <p className="mb-5 text-sm text-muted-foreground">Apakah kamu yakin ingin menghapus data santri ini?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted">Batal</button>
-              <button id="btn-konfirm-hapus-santri" onClick={() => handleDelete(deleteConfirm)} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600">Ya, Hapus</button>
+              <button onClick={() => setDeleteConfirm(null)} className="rounded-lg border px-4 py-2 text-sm transition hover:bg-muted" disabled={loading}>Batal</button>
+              <button id="btn-konfirm-hapus-santri" onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50">
+                Ya, Hapus
+              </button>
             </div>
           </div>
         </div>
