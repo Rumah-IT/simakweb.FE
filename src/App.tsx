@@ -26,17 +26,31 @@ import NilaiPage from './pages/NilaiPage'
 import WaliPage from './pages/WaliPage'
 import RelasiPage from './pages/RelasiPage'
 
+// Santri Portal
+import SantriLayout from './pages/SantriLayout'
+import SantriDashboardPage from './pages/santri/SantriDashboardPage'
+
+function RoleRedirect() {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") ?? "{}")
+    const role: string = user?.role ?? ""
+    if (role === "SANTRI") return <Navigate to="/santri" replace />
+  } catch {}
+  return <Navigate to="/dashboard" replace />
+}
+
 function App() {
   return (
     <>
     <Toaster position="top-right" richColors closeButton />
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<RoleRedirect />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/otp" element={<OtpPage />} />
       <Route path="/dev/beranda" element={<Beranda />} />
 
+      {/* Admin / Mentor Dashboard */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardPage />} />
@@ -60,6 +74,18 @@ function App() {
 
           {/* Existing */}
           <Route path="settings" element={<DashboardPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      {/* Santri Portal */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/santri" element={<SantriLayout />}>
+          <Route index element={<SantriDashboardPage />} />
+          <Route path="absensi" element={<AbsensiPage />} />
+          <Route path="tugas" element={<TugasPage />} />
+          <Route path="jurnal" element={<JurnalPage />} />
+          <Route path="nilai" element={<NilaiPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>

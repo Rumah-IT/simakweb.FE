@@ -17,7 +17,7 @@ import { AuthCarousel } from "@/components/AuthCarousel"
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string })?.from ?? "/dashboard"
+  const from = (location.state as { from?: string })?.from ?? null
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -36,7 +36,9 @@ export default function LoginPage() {
       localStorage.setItem("refreshToken", refreshToken)
       localStorage.setItem("user", JSON.stringify(user))
       
-      navigate(from, { replace: true })
+      const role: string = user?.role ?? ""
+      const defaultPath = role === "SANTRI" ? "/santri" : "/dashboard"
+      navigate(from ?? defaultPath, { replace: true })
     } catch (err: unknown) {
       const apiError = err as { message?: string }
       setError(apiError?.message ?? "Email atau password salah.")

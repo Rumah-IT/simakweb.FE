@@ -68,14 +68,14 @@ export default function SantriPage() {
       const dataArray = Array.isArray(res.data) ? res.data : (res.data?.data || [])
       const mapped = dataArray.map((u: any) => ({
         id: u.id,
-        nama: u.fullName,
-        email: u.email,
+        nama: u.fullName ?? "-",
+        email: u.email ?? "-",
         status: u.isActive ? "aktif" : "nonaktif",
-        nis: u.santriProfile?.nis || "-", 
-        kelas: u.santriProfile?.classId || "-",
-        divisi: "-", 
-        telepon: u.santriProfile?.phone || u.phone || "-",
-        alamat: u.santriProfile?.address || "-"
+        nis: u.santriProfile?.nis ?? "-", 
+        kelas: u.santriProfile?.class?.name ?? u.santriProfile?.classId ?? "-",
+        divisi: u.santriProfile?.division?.name ?? "-", 
+        telepon: u.phone ?? u.santriProfile?.phone ?? "-",
+        alamat: u.santriProfile?.address ?? "-"
       }))
       setData(mapped)
       setError("")
