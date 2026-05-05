@@ -63,7 +63,7 @@ export default function SantriTugasPage() {
 
   const isDueSoon = (dueDate: string) => {
     const diff = new Date(dueDate).getTime() - now.getTime()
-    return diff > 0 && diff < 3 * 24 * 60 * 60 * 1000 // within 3 days
+    return diff > 0 && diff < 3 * 24 * 60 * 60 * 1000 
   }
 
   const TugasCard = ({ t }: { t: Tugas }) => {
@@ -98,7 +98,7 @@ export default function SantriTugasPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
@@ -107,8 +107,7 @@ export default function SantriTugasPage() {
         <p className="text-sm text-muted-foreground">Daftar tugas yang tersedia di kelasmu.</p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+<div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "Total Tugas", value: data.length, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40", icon: FileText },
           { label: "Segera Deadline", value: data.filter(t => t.dueDate && isDueSoon(t.dueDate)).length, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/40", icon: Clock },
@@ -130,8 +129,7 @@ export default function SantriTugasPage() {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
+<div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
           type="text"
@@ -142,8 +140,7 @@ export default function SantriTugasPage() {
         />
       </div>
 
-      {/* Content */}
-      {loading ? (
+{loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>

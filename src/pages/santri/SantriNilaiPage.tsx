@@ -22,7 +22,7 @@ export default function SantriNilaiPage() {
       setError("")
       const res = await api.ScoreAPI.getAll()
       const all = Array.isArray(res.data) ? res.data : (res.data?.data || [])
-      // filter hanya nilai milik santri ini
+      
       const mine = all.filter((n: any) => n.santriId === user.id)
       mine.sort((a: any, b: any) => {
         if (a.year !== b.year) return b.year - a.year
@@ -53,7 +53,7 @@ export default function SantriNilaiPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-primary" />
@@ -62,8 +62,7 @@ export default function SantriNilaiPage() {
         <p className="text-sm text-muted-foreground">Rekap evaluasi bulanan kamu berdasarkan kehadiran, tugas, dan sikap.</p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+<div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "Total Evaluasi", value: loading ? "—" : data.length, icon: BarChart3, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
           { label: "Rata-rata Nilai", value: loading ? "—" : avgFinal, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
@@ -83,8 +82,7 @@ export default function SantriNilaiPage() {
         ))}
       </div>
 
-      {/* Content */}
-      {loading ? (
+{loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>

@@ -8,9 +8,7 @@ const fetchWrapper = async (endpoint: string, options: RequestInit = {}) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  // Hanya set application/json jika body adalah string (JSON),
-  // biarkan browser mengatur header jika body adalah FormData
-  if (typeof options.body === 'string') {
+if (typeof options.body === 'string') {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -54,7 +52,6 @@ export const UserAPI = {
   update: (id: string, data: any) => fetchWrapper(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => fetchWrapper(`/users/${id}`, { method: 'DELETE' }),
 };
-
 
 export const SantriAPI = {
   getAll: () => fetchWrapper('/user-profile?role=SANTRI&limit=1000'),

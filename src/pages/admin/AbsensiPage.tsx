@@ -135,8 +135,7 @@ export default function AbsensiPage() {
     return matchSearch && matchStatus && matchClass
   })
 
-
-  const openEdit = (a: Attendance) => {
+const openEdit = (a: Attendance) => {
     setEditTarget(a)
     setForm({ classId: a.classId, santriId: a.santriId, mentorId: a.mentorId, date: a.date, status: a.status, notes: a.notes, imageUrl: a.imageUrl })
     setMenuOpen(null)
@@ -277,7 +276,7 @@ export default function AbsensiPage() {
                   <CalendarCheck className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada rekap absensi.
                 </td></tr>
               ) : filtered.map((a, idx) => {
-                const cfg = STATUS_CFG[a.status] || STATUS_CFG.ALFA // fallback
+                const cfg = STATUS_CFG[a.status] || STATUS_CFG.ALFA 
                 return (
                   <tr key={a.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>

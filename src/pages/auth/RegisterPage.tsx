@@ -14,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { AuthCarousel } from "@/components/AuthCarousel"
 
-
 export default function RegisterPage() {
   const navigate = useNavigate()
   const [name, setName] = useState("")

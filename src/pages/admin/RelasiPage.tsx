@@ -50,19 +50,17 @@ export default function RelasiPage() {
       const [resRelasi, resSantri, resWali] = await Promise.all([
         api.RelasiAPI.getAll(),
         api.SantriAPI.getAll(),
-        api.AuthAPI.getUsers() // because relation uses userId, not profileId
+        api.AuthAPI.getUsers() 
       ])
 
-      // Parse santri
-      const sArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
+const sArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
       setSantriList(sArray.map((s: any) => ({
-        id: s.userId || s.id, // we might need userId, let's use the actual user id if available, else id
+        id: s.userId || s.id, 
         nama: s.fullName || s.user?.fullName,
         nis: s.nis
       })))
 
-      // Parse wali (users with role WALI_SANTRI)
-      const wArray = Array.isArray(resWali.data) ? resWali.data : (resWali.data?.data || [])
+const wArray = Array.isArray(resWali.data) ? resWali.data : (resWali.data?.data || [])
       setWaliList(wArray.filter((u: any) => u.role === "WALI_SANTRI").map((w: any) => ({
         id: w.id,
         nama: w.fullName
@@ -108,8 +106,7 @@ export default function RelasiPage() {
     r.nisSantri.includes(search)
   )
 
-
-  const handleSave = async () => {
+const handleSave = async () => {
     if (!form.santriId || !form.waliId || !form.category) { 
       toast.error("Harap lengkapi semua field wajib."); 
       return 

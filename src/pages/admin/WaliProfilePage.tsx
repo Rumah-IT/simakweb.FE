@@ -9,8 +9,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import api from "@/services/api"
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 const statusConfig: Record<string, any> = {
   aktif: { label: "Aktif", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
   nonaktif: { label: "Non-Aktif", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
@@ -35,8 +33,6 @@ const activityBg: Record<string, any> = {
   jurnal: "bg-emerald-50 dark:bg-emerald-950/30",
   nilai: "bg-violet-50 dark:bg-violet-950/30",
 }
-
-// ─── Avatar component ─────────────────────────────────────────────────────────
 
 const colorPairs = [
   ["bg-violet-100 dark:bg-violet-900/50", "text-violet-700 dark:text-violet-300"],
@@ -85,11 +81,9 @@ export default function WaliProfilePage() {
       try {
         setLoading(true)
         const resSantri = await api.SantriAPI.getById(santriId)
-        
-        // Backend returns { success, message, data: UserObject }
-        // getAll returns User objects, getById returns the same
-        const raw = resSantri?.data ?? resSantri
-        const s = raw?.data ?? raw // handle nested or flat
+
+const raw = resSantri?.data ?? resSantri
+        const s = raw?.data ?? raw 
 
         if (s && s.id) {
           setSantri({
@@ -104,8 +98,7 @@ export default function WaliProfilePage() {
             avatar: s.fullName ?? "S"
           })
 
-          // Find wali relation — santriId in relation uses the User's ID
-          try {
+try {
             const resRelasi = await api.RelasiAPI.getAll()
             const rArray = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
             const relation = rArray.find((r: any) => r.santriId === santriId)

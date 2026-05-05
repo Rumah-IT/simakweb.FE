@@ -117,8 +117,7 @@ export default function TugasPage() {
     return matchSearch && matchStatus
   })
 
-  
-  const openEdit = (t: Tugas) => {
+const openEdit = (t: Tugas) => {
     setEditTarget(t)
     setForm({
       title: t.title,

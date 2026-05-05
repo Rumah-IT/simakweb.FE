@@ -243,9 +243,7 @@ export default function OtpPage() {
                         </p>
                       )}
 
-
-
-                      <Button
+<Button
                         type="submit"
                         className="w-full"
                         disabled={loading || !isComplete}

@@ -49,7 +49,7 @@ const predikatConfig: Record<Nilai["predikat"], string> = {
 type FormState = {
   santriId: string
   classId: string
-  bulan: string // YYYY-MM format
+  bulan: string 
   taskAvg: number
   attitudeAvg: number
   attendancePoin: number

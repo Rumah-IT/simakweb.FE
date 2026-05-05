@@ -90,8 +90,7 @@ export default function JurnalPage() {
     return j.santriName.toLowerCase().includes(q) || j.className.toLowerCase().includes(q) || j.activity.toLowerCase().includes(q)
   })
 
-  
-  const openEdit = (j: Jurnal) => { 
+const openEdit = (j: Jurnal) => { 
     setEditTarget(j); 
     setForm({ santriId: j.santriId, classId: j.classId, date: j.date, activity: j.activity, notes: j.notes }); 
     setMenuOpen(null); 

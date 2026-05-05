@@ -93,8 +93,7 @@ export default function DashboardPage() {
         api.AssignmentAPI.getAll().catch(() => null) 
       ])
 
-      // Determine total counts
-      const totalSantri = Array.isArray(resSantri?.data) ? resSantri.data.length : (resSantri?.data?.data?.length || 0)
+const totalSantri = Array.isArray(resSantri?.data) ? resSantri.data.length : (resSantri?.data?.data?.length || 0)
       const totalDivisi = resDivisi?.data?.meta?.total || (Array.isArray(resDivisi?.data) ? resDivisi.data.length : (resDivisi?.data?.data?.length || 0))
       const totalKelas = resKelas?.data?.meta?.total || (Array.isArray(resKelas?.data) ? resKelas.data.length : (resKelas?.data?.data?.length || 0))
       const totalPelajaran = Array.isArray(resTugas?.data) ? resTugas.data.length : (resTugas?.data?.data?.length || 0)
@@ -106,8 +105,7 @@ export default function DashboardPage() {
         totalPelajaran,
       })
 
-      // Mock recent activities since backend doesn't have an audit log endpoint
-      setRecentActivities([
+setRecentActivities([
         { id: 1, message: "Berhasil melakukan sinkronisasi data divisi", time: "Baru saja", status: "success" },
         { id: 2, message: `Menemukan ${totalSantri} santri aktif`, time: "10 menit lalu", status: "info" },
         { id: 3, message: `Sistem mendeteksi ${totalKelas} kelas berjalan`, time: "1 jam lalu", status: "success" },

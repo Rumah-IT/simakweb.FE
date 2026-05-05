@@ -72,9 +72,9 @@ export default function KelasPage() {
         divisi: c.division?.name || "-",
         mentorId: c.mentorId,
         pengajar: c.mentor?.fullName || "-",
-        kapasitas: 30, // Mocked as DB doesn't have it
+        kapasitas: 30, 
         jumlahSantri: c._count?.santriProfiles || 0,
-        status: "aktif" // Mocked
+        status: "aktif" 
       }))
       setData(mapped)
       setError("")

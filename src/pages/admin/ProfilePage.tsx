@@ -136,9 +136,8 @@ export default function ProfilePage() {
 
     setPasswordLoading(true)
     try {
-      // Backend currently does not support password update via user endpoint
-      // Simulate API call for now
-      await new Promise(r => setTimeout(r, 1000))
+
+await new Promise(r => setTimeout(r, 1000))
       
       setPasswordSuccess(true)
       setCurrentPassword("")

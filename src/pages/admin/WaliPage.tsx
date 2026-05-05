@@ -57,8 +57,7 @@ export default function WaliPage() {
       }))
       setData(mapped)
 
-      // Get users with role WALI_SANTRI to associate profile with
-      const uArray = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || [])
+const uArray = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || [])
       setUserList(uArray.filter((u: any) => u.role === "WALI_SANTRI").map((u: any) => ({
         id: u.id,
         nama: u.fullName,

@@ -51,7 +51,7 @@ export default function SantriJurnalPage() {
       setClassesList(cArr.map((c: any) => ({ id: c.id, nama: c.name })))
 
       const jArr = Array.isArray(resJ.data) ? resJ.data : (resJ.data?.data || [])
-      // Filter hanya jurnal milik santri ini
+      
       const mine = jArr
         .filter((j: any) => j.santriId === user.id)
         .map((j: any) => ({
@@ -130,7 +130,7 @@ export default function SantriJurnalPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <BookOpenCheck className="h-5 w-5 text-primary" />
@@ -139,8 +139,7 @@ export default function SantriJurnalPage() {
         <p className="text-sm text-muted-foreground">Catat dan pantau perkembangan harian santri.</p>
       </div>
 
-      {/* Stat */}
-      <div className="grid gap-4 sm:grid-cols-2">
+<div className="grid gap-4 sm:grid-cols-2">
         <Card className="border-0 shadow-sm ring-1 ring-border/60 transition-all hover:shadow-md hover:-translate-y-0.5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Jurnal</CardTitle>
@@ -169,8 +168,7 @@ export default function SantriJurnalPage() {
         </Card>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -189,8 +187,7 @@ export default function SantriJurnalPage() {
         </button>
       </div>
 
-      {/* Table */}
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[200px]">
+<Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[200px]">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -261,8 +258,7 @@ export default function SantriJurnalPage() {
         </div>
       </Card>
 
-      {/* Modal Tambah/Edit */}
-      {modalOpen && (
+{modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
           <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between">
@@ -303,8 +299,7 @@ export default function SantriJurnalPage() {
         </div>
       )}
 
-      {/* Konfirmasi Hapus */}
-      {deleteConfirm && (
+{deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-2xl ring-1 ring-border/60" onClick={e => e.stopPropagation()}>
             <div className="mb-4 flex items-center gap-3">

@@ -46,8 +46,7 @@ export default function SantriAbsensiPage() {
       const res = await api.AttendanceAPI.getAll()
       const all = Array.isArray(res.data) ? res.data : (res.data?.data || [])
 
-      // Filter hanya absensi milik santri yang sedang login
-      const mine = all.filter((a: any) => a.santriId === user.id)
+const mine = all.filter((a: any) => a.santriId === user.id)
 
       const mapped: Attendance[] = mine.map((a: any) => ({
         id: a.id,
@@ -58,8 +57,7 @@ export default function SantriAbsensiPage() {
         mentorName: a.mentor?.fullName ?? "-",
       }))
 
-      // Urutkan terbaru di atas
-      mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setData(mapped)
     } catch (err: any) {
       const msg = err?.message || "Gagal mengambil rekap absensi"
@@ -88,7 +86,7 @@ export default function SantriAbsensiPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-5 w-5 text-primary" />
@@ -99,8 +97,7 @@ export default function SantriAbsensiPage() {
         </p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: "Total Rekap", value: counts.total, icon: CalendarCheck, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
           { label: "Hadir", value: counts.hadir, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
@@ -123,8 +120,7 @@ export default function SantriAbsensiPage() {
         ))}
       </div>
 
-      {/* Filter bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -149,8 +145,7 @@ export default function SantriAbsensiPage() {
         </Select>
       </div>
 
-      {/* Table */}
-      <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[200px]">
+<Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[200px]">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

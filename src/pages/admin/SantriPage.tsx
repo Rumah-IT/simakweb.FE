@@ -131,7 +131,7 @@ export default function SantriPage() {
         toast.success("Santri berhasil ditambahkan.")
       }
       setModalOpen(false)
-      fetchData() // Refresh data
+      fetchData() 
     } catch (err: any) {
       toast.error(err.message || "Terjadi kesalahan saat menyimpan data.")
     } finally {

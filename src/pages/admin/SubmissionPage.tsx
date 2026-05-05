@@ -225,8 +225,7 @@ export default function SubmissionPage() {
         </div>
       </Card>
 
-      {/* Detail Modal */}
-      {detailModal && (
+{detailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDetailModal(null)}>
           <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between">
@@ -262,8 +261,7 @@ export default function SubmissionPage() {
         </div>
       )}
 
-      {/* Nilai Modal */}
-      {nilaiModal && (
+{nilaiModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setNilaiModal(null)}>
           <div className="relative w-full max-w-md rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between">

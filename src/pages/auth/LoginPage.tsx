@@ -98,8 +98,7 @@ function LoginForm({
                 </p>
               </div>
 
-
-              {error && (
+{error && (
                 <div className="rounded-md bg-destructive/10 px-4 py-3">
                   <FieldError className="text-center">{error}</FieldError>
                 </div>
@@ -152,8 +151,7 @@ function LoginForm({
                 </p>
               </div>
 
-
-              <FieldDescription className="text-center">
+<FieldDescription className="text-center">
                 Belum punya akun?{" "}
                 <Link
                   to="/register"
@@ -165,15 +163,11 @@ function LoginForm({
             </FieldGroup>
           </form>
 
-              
-
-          <AuthCarousel />
+<AuthCarousel />
         </CardContent>
       </Card>
 
-
-
-      <FieldDescription className="px-6 text-center">
+<FieldDescription className="px-6 text-center">
         Dengan masuk, Anda menyetujui{" "}
         <a href="#" className="underline underline-offset-4">
           Syarat Layanan

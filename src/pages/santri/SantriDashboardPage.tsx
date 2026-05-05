@@ -68,7 +68,7 @@ export default function SantriDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary" />
@@ -79,7 +79,6 @@ export default function SantriDashboardPage() {
         </p>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { title: "Kehadiran", value: loading ? "—" : `${persenHadir}%`, sub: `${stats.hadir} dari ${totalAbsensi} pertemuan`, icon: ClipboardCheck, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
@@ -102,8 +101,7 @@ export default function SantriDashboardPage() {
         ))}
       </div>
 
-      {/* Kehadiran Progress */}
-      {!loading && totalAbsensi > 0 && (
+{!loading && totalAbsensi > 0 && (
         <Card className="border-0 shadow-sm ring-1 ring-border/60">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -141,9 +139,8 @@ export default function SantriDashboardPage() {
         </Card>
       )}
 
-      {/* Main Grid */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Riwayat Absensi */}
+<div className="grid gap-6 lg:grid-cols-5">
+        
         <div className="lg:col-span-3">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">Riwayat Absensi Terakhir</h2>
@@ -188,8 +185,7 @@ export default function SantriDashboardPage() {
           </Card>
         </div>
 
-        {/* Tugas Terbaru */}
-        <div className="lg:col-span-2">
+<div className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">Tugas Tersedia</h2>
             <Link to="/santri/tugas" className="flex items-center gap-1 text-xs text-primary hover:underline">
@@ -228,8 +224,7 @@ export default function SantriDashboardPage() {
         </div>
       </div>
 
-      {/* Quick Links */}
-      <div>
+<div>
         <h2 className="mb-3 text-base font-semibold">Akses Cepat</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
