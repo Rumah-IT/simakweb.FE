@@ -8,7 +8,7 @@ export default function Beranda() {
       bg: "from-cyan-600/20 to-cyan-900/40",
       border: "border-purple-500/20",
       delay: "animation-delay-100",
-      link: "https://dbdiagram.io/e/695b0c0439fa3db27b1378a3/69dc4ead0f7c9ef2c0dc596d"
+      link: "https://dbdiagram.io/e/69e583b40aa78f6bc11159d4/69e584500aa78f6bc1115fc1"
     },
     {
       title: "Sketsa UI",
