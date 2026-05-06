@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AuthCarousel } from "@/components/AuthCarousel"
+// @ts-ignore
 import Silk from "@/components/Silk"
 
 export default function LoginPage() {
@@ -38,7 +39,9 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(user))
       
       const role: string = user?.role ?? ""
-      const defaultPath = role === "SANTRI" ? "/santri" : "/dashboard"
+      let defaultPath = "/dashboard"
+      if (role === "SANTRI") defaultPath = "/santri"
+      if (role === "WALI") defaultPath = "/wali"
       navigate(from ?? defaultPath, { replace: true })
     } catch (err: unknown) {
       const apiError = err as { message?: string }
@@ -50,7 +53,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10 overflow-hidden">
-      {/* Silk animated background */}
       <div className="absolute inset-0 z-0">
         <Silk
           speed={5}

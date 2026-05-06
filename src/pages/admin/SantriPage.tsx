@@ -14,11 +14,17 @@ import {
   Phone,
   ExternalLink,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Link2,
+  Heart
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import api from "@/services/api"
+
+const hubunganLabel: Record<string, string> = {
+  FATHER: "Ayah", MOTHER: "Ibu", GUARDIAN: "Wali", OTHER: "Lainnya"
+}
 
 interface Santri {
   id: string
@@ -60,6 +66,64 @@ export default function SantriPage() {
   const [form, setForm] = useState<SantriFormState>(initialFormState)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // Wali relation modal state
+  const [waliModalSantri, setWaliModalSantri] = useState<Santri | null>(null)
+  const [waliList, setWaliList] = useState<{id: string, nama: string}[]>([])
+  const [relasiList, setRelasiList] = useState<any[]>([])
+  const [relasiForm, setRelasiForm] = useState({ waliId: "", category: "FATHER" })
+  const [relasiLoading, setRelasiLoading] = useState(false)
+  const [relasiSaving, setRelasiSaving] = useState(false)
+
+  const openWaliModal = async (s: Santri) => {
+    setMenuOpen(null)
+    setWaliModalSantri(s)
+    setRelasiForm({ waliId: "", category: "FATHER" })
+    setRelasiLoading(true)
+    try {
+      const [resUsers, resRelasi] = await Promise.all([
+        api.AuthAPI.getUsers(),
+        api.RelasiAPI.getAll()
+      ])
+      const uArr = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || [])
+      setWaliList(uArr.filter((u: any) => u.role === "WALI_SANTRI" || u.role === "WALI").map((u: any) => ({ id: u.id, nama: u.fullName })))
+      const rArr = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
+      setRelasiList(rArr.filter((r: any) => r.santriId === s.id))
+    } catch {
+      setWaliList([])
+      setRelasiList([])
+    } finally {
+      setRelasiLoading(false)
+    }
+  }
+
+  const handleSaveRelasi = async () => {
+    if (!relasiForm.waliId) { toast.error("Pilih akun wali terlebih dahulu."); return }
+    if (!waliModalSantri) return
+    setRelasiSaving(true)
+    try {
+      await api.RelasiAPI.create({ waliId: relasiForm.waliId, santriId: waliModalSantri.id, category: relasiForm.category })
+      toast.success("Relasi berhasil ditambahkan.")
+      const resRelasi = await api.RelasiAPI.getAll()
+      const rArr = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
+      setRelasiList(rArr.filter((r: any) => r.santriId === waliModalSantri.id))
+      setRelasiForm({ waliId: "", category: "FATHER" })
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan relasi.")
+    } finally {
+      setRelasiSaving(false)
+    }
+  }
+
+  const handleDeleteRelasi = async (relasiId: string) => {
+    try {
+      await api.RelasiAPI.delete(relasiId)
+      toast.success("Relasi dihapus.")
+      setRelasiList(prev => prev.filter(r => r.id !== relasiId))
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghapus relasi.")
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -180,7 +244,7 @@ export default function SantriPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input id="search-santri" type="text" placeholder="Cari nama, email, kelas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
           </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterStatus} onValueChange={v => setFilterStatus(v || "")}>
             <SelectTrigger id="filter-status-santri" className="w-36">
               <SelectValue placeholder="Semua" />
             </SelectTrigger>
@@ -262,8 +326,9 @@ export default function SantriPage() {
                       <div className="relative inline-block">
                         <button id={`menu-santri-${s.id}`} onClick={() => setMenuOpen(menuOpen === s.id ? null : s.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
                         {menuOpen === s.id && (
-                          <div className="absolute right-0 top-8 z-20 min-w-[130px] rounded-lg border bg-popover shadow-lg">
+                          <div className="absolute right-0 top-8 z-20 min-w-[150px] rounded-lg border bg-popover shadow-lg">
                             <button onClick={() => openEdit(s)} className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"><Pencil className="h-3.5 w-3.5" />Edit</button>
+                            <button onClick={() => openWaliModal(s)} className="flex w-full items-center gap-2 px-3 py-2 text-sm text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/30"><Link2 className="h-3.5 w-3.5" />Atur Wali</button>
                             <button onClick={() => { setDeleteConfirm(s.id); setMenuOpen(null) }} className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"><Trash2 className="h-3.5 w-3.5" />Hapus</button>
                           </div>
                         )}
@@ -361,6 +426,75 @@ export default function SantriPage() {
       )}
 
       {menuOpen !== null && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />}
+
+      {waliModalSantri && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setWaliModalSantri(null)}>
+          <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold">Relasi Wali — {waliModalSantri.nama}</h2>
+                <p className="text-xs text-muted-foreground">NIS: {waliModalSantri.nis}</p>
+              </div>
+              <button onClick={() => setWaliModalSantri(null)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
+            </div>
+
+            <div className="mb-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Wali Terdaftar</p>
+              {relasiLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+              ) : relasiList.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-2">Belum ada wali terkait.</p>
+              ) : (
+                <div className="space-y-2">
+                  {relasiList.map(r => (
+                    <div key={r.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-3.5 w-3.5 text-pink-500" />
+                        <span className="text-sm font-medium">{r.wali?.fullName || "-"}</span>
+                        <span className="text-xs text-muted-foreground">({hubunganLabel[r.category] || r.category})</span>
+                      </div>
+                      <button onClick={() => handleDeleteRelasi(r.id)} className="text-red-500 hover:text-red-600 p-1 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tambah Wali Baru</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Akun Wali</label>
+                  <Select value={relasiForm.waliId} onValueChange={v => setRelasiForm({ ...relasiForm, waliId: v || "" })}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder="Pilih wali..." /></SelectTrigger>
+                    <SelectContent>
+                      {waliList.map(w => <SelectItem key={w.id} value={w.id}>{w.nama}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Hubungan</label>
+                  <Select value={relasiForm.category} onValueChange={v => setRelasiForm({ ...relasiForm, category: v || "FATHER" })}>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FATHER">Ayah</SelectItem>
+                      <SelectItem value="MOTHER">Ibu</SelectItem>
+                      <SelectItem value="GUARDIAN">Wali</SelectItem>
+                      <SelectItem value="OTHER">Lainnya</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button onClick={handleSaveRelasi} disabled={relasiSaving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50">
+                  {relasiSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Simpan Relasi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

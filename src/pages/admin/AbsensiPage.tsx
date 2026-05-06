@@ -235,7 +235,7 @@ const openEdit = (a: Attendance) => {
               <SelectItem value="ALFA">Alpha</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterClass} onValueChange={setFilterClass}>
+          <Select value={filterClass} onValueChange={v => setFilterClass(v ?? "semua")}>
             <SelectTrigger id="filter-kelas-absensi" className="w-44">
               <SelectValue placeholder="Semua Kelas" />
             </SelectTrigger>
@@ -334,7 +334,7 @@ const openEdit = (a: Attendance) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v })}>
+                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v ?? "" })}>
                     <SelectTrigger id="input-kelas-absensi" className="w-full">
                       <SelectValue placeholder="Pilih kelas..." />
                     </SelectTrigger>
@@ -345,7 +345,7 @@ const openEdit = (a: Attendance) => {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
-                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v })}>
+                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v ?? "" })}>
                     <SelectTrigger id="input-santri-absensi" className="w-full">
                       <SelectValue placeholder="Pilih santri..." />
                     </SelectTrigger>
@@ -359,7 +359,7 @@ const openEdit = (a: Attendance) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Mentor <span className="text-red-500">*</span></label>
-                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v })}>
+                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v ?? "" })}>
                     <SelectTrigger id="input-mentor-absensi" className="w-full">
                       <SelectValue placeholder="Pilih mentor..." />
                     </SelectTrigger>

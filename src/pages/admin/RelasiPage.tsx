@@ -47,39 +47,46 @@ export default function RelasiPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [resRelasi, resSantri, resWali] = await Promise.all([
-        api.RelasiAPI.getAll(),
+
+      const [resSantri, resWali] = await Promise.all([
         api.SantriAPI.getAll(),
-        api.AuthAPI.getUsers() 
+        api.AuthAPI.getUsers()
       ])
 
-const sArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
+      const sArray = Array.isArray(resSantri.data) ? resSantri.data : (resSantri.data?.data || [])
       setSantriList(sArray.map((s: any) => ({
-        id: s.userId || s.id, 
+        id: s.userId || s.id,
         nama: s.fullName || s.user?.fullName,
         nis: s.nis
       })))
 
-const wArray = Array.isArray(resWali.data) ? resWali.data : (resWali.data?.data || [])
-      setWaliList(wArray.filter((u: any) => u.role === "WALI_SANTRI").map((w: any) => ({
+      const wArray = Array.isArray(resWali.data) ? resWali.data : (resWali.data?.data || [])
+      setWaliList(wArray.filter((u: any) => u.role === "WALI_SANTRI" || u.role === "WALI").map((w: any) => ({
         id: w.id,
         nama: w.fullName
       })))
 
-      const relArray = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
-      const mapped = relArray.map((r: any) => ({
-        id: r.id,
-        santriId: r.santriId,
-        santriName: r.santri?.fullName || "-",
-        nisSantri: r.santri?.nis || "-",
-        waliId: r.waliId,
-        waliName: r.wali?.fullName || "-",
-        emailWali: r.wali?.email || "-",
-        category: r.category || "OTHER",
-        createdAt: r.createdAt || new Date().toISOString()
-      }))
+      // Fetch relasi data (endpoint may require backend fix for full functionality)
+      try {
+        const resRelasi = await api.RelasiAPI.getAll()
+        const relArray = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
+        const mapped = relArray.map((r: any) => ({
+          id: r.id,
+          santriId: r.santriId,
+          santriName: r.santri?.fullName || "-",
+          nisSantri: r.santri?.nis || "-",
+          waliId: r.waliId,
+          waliName: r.wali?.fullName || "-",
+          emailWali: r.wali?.email || "-",
+          category: r.category || "OTHER",
+          createdAt: r.createdAt || new Date().toISOString()
+        }))
+        setData(mapped)
+      } catch {
+        // Relasi endpoint may be unauthorized on backend — show empty list
+        setData([])
+      }
 
-      setData(mapped)
       setError("")
     } catch (err: any) {
       console.error(err)
@@ -169,7 +176,13 @@ const handleSave = async () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input id="search-relasi" type="text" placeholder="Cari santri, NIS, atau wali..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
         </div>
-
+        <button 
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
+        >
+          <Link2 className="h-4 w-4" />
+          Tambah Relasi
+        </button>
       </div>
 
       <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
@@ -272,7 +285,7 @@ const handleSave = async () => {
             <div className="space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Akun Santri <span className="text-red-500">*</span></label>
-                <Select value={form.santriId} onValueChange={v => setForm({...form, santriId: v})}>
+                <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v || "" })}>
                   <SelectTrigger id="input-santri-relasi" className="w-full">
                     <SelectValue placeholder="Pilih santri..." />
                   </SelectTrigger>
@@ -285,7 +298,7 @@ const handleSave = async () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Akun Wali <span className="text-red-500">*</span></label>
-                  <Select value={form.waliId} onValueChange={v => setForm({...form, waliId: v})}>
+                  <Select value={form.waliId} onValueChange={v => setForm({ ...form, waliId: v || "" })}>
                     <SelectTrigger id="input-wali-relasi" className="w-full">
                       <SelectValue placeholder="Pilih wali..." />
                     </SelectTrigger>
@@ -296,7 +309,7 @@ const handleSave = async () => {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Hubungan</label>
-                  <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+                  <Select value={form.category} onValueChange={v => setForm({ ...form, category: v || "" })}>
                     <SelectTrigger id="input-hubungan-relasi" className="w-full">
                       <SelectValue placeholder="Pilih hubungan..." />
                     </SelectTrigger>

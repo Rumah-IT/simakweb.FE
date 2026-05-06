@@ -175,7 +175,7 @@ export default function KelasPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input id="search-kelas" type="text" placeholder="Cari nama kelas atau pengajar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
           </div>
-          <Select value={filterDivisi} onValueChange={setFilterDivisi}>
+          <Select value={filterDivisi} onValueChange={v => setFilterDivisi(v || "")}>
             <SelectTrigger id="filter-divisi-kelas" className="w-48">
               <SelectValue placeholder="Semua Divisi" />
             </SelectTrigger>
@@ -273,7 +273,7 @@ export default function KelasPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Divisi <span className="text-red-500">*</span></label>
-                  <Select value={form.divisiId} onValueChange={v => setForm({ ...form, divisiId: v })}>
+                  <Select value={form.divisiId} onValueChange={v => setForm({ ...form, divisiId: v || "" })}>
                     <SelectTrigger id="input-divisi-kelas" className="w-full">
                       <SelectValue placeholder="Pilih Divisi" />
                     </SelectTrigger>
@@ -288,7 +288,7 @@ export default function KelasPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Pengajar (Mentor) <span className="text-red-500">*</span></label>
-                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v })}>
+                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v || "" })}>
                     <SelectTrigger id="input-mentor-kelas" className="w-full">
                       <SelectValue placeholder="Pilih Mentor" />
                     </SelectTrigger>

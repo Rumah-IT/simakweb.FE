@@ -32,11 +32,15 @@ import SantriTugasPage from './pages/santri/SantriTugasPage'
 import SantriNilaiPage from './pages/santri/SantriNilaiPage'
 import SantriJurnalPage from './pages/santri/SantriJurnalPage'
 
+import WaliLayout from './pages/wali/WaliLayout'
+import WaliDashboardPage from './pages/wali/WaliDashboardPage'
+
 function RoleRedirect() {
   try {
     const user = JSON.parse(localStorage.getItem("user") ?? "{}")
     const role: string = user?.role ?? ""
     if (role === "SANTRI") return <Navigate to="/santri" replace />
+    if (role === "WALI") return <Navigate to="/wali" replace />
   } catch {}
   return <Navigate to="/dashboard" replace />
 }
@@ -82,6 +86,13 @@ function App() {
           <Route path="tugas" element={<SantriTugasPage />} />
           <Route path="jurnal" element={<SantriJurnalPage />} />
           <Route path="nilai" element={<SantriNilaiPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/wali" element={<WaliLayout />}>
+          <Route index element={<WaliDashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>
