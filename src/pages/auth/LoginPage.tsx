@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AuthCarousel } from "@/components/AuthCarousel"
+import Silk from "@/components/Silk"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -48,8 +49,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
+    <div className="relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10 overflow-hidden">
+      {/* Silk animated background */}
+      <div className="absolute inset-0 z-0">
+        <Silk
+          speed={5}
+          scale={1}
+          color="#4f46e5"
+          noiseIntensity={1.5}
+          rotation={0}
+        />
+      </div>
+      <div className="relative z-10 w-full max-w-sm md:max-w-4xl">
         <LoginForm
           email={email}
           password={password}
