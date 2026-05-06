@@ -60,6 +60,7 @@ export default function LoginPage() {
           rotation={0}
         />
       </div>
+      {/* Login card */}
       <div className="relative z-10 w-full max-w-sm md:max-w-4xl">
         <LoginForm
           email={email}
