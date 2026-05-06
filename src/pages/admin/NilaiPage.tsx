@@ -49,7 +49,7 @@ const predikatConfig: Record<Nilai["predikat"], string> = {
 type FormState = {
   santriId: string
   classId: string
-  bulan: string // YYYY-MM format
+  bulan: string 
   taskAvg: number
   attitudeAvg: number
   attendancePoin: number
@@ -250,7 +250,7 @@ export default function NilaiPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input id="search-nilai" type="text" placeholder="Cari santri atau kelas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
           </div>
-          <Select value={filterPredikat} onValueChange={setFilterPredikat}>
+          <Select value={filterPredikat} onValueChange={v => setFilterPredikat(v || "")}>
             <SelectTrigger id="filter-predikat-nilai" className="w-40">
               <SelectValue placeholder="Semua Predikat" />
             </SelectTrigger>
@@ -343,7 +343,7 @@ export default function NilaiPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
-                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v })}>
+                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v || "" })}>
                     <SelectTrigger id="input-santri-nilai" className="w-full">
                       <SelectValue placeholder="Pilih santri..." />
                     </SelectTrigger>
@@ -354,7 +354,7 @@ export default function NilaiPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v })}>
+                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v || "" })}>
                     <SelectTrigger id="input-kelas-nilai" className="w-full">
                       <SelectValue placeholder="Pilih kelas..." />
                     </SelectTrigger>

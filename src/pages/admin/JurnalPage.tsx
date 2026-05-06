@@ -90,8 +90,7 @@ export default function JurnalPage() {
     return j.santriName.toLowerCase().includes(q) || j.className.toLowerCase().includes(q) || j.activity.toLowerCase().includes(q)
   })
 
-  
-  const openEdit = (j: Jurnal) => { 
+const openEdit = (j: Jurnal) => { 
     setEditTarget(j); 
     setForm({ santriId: j.santriId, classId: j.classId, date: j.date, activity: j.activity, notes: j.notes }); 
     setMenuOpen(null); 
@@ -243,7 +242,7 @@ export default function JurnalPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
-                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v })}>
+                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v || "" })}>
                     <SelectTrigger id="input-santri-jurnal" className="w-full">
                       <SelectValue placeholder="Pilih santri..." />
                     </SelectTrigger>
@@ -254,7 +253,7 @@ export default function JurnalPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v })}>
+                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v || "" })}>
                     <SelectTrigger id="input-kelas-jurnal" className="w-full">
                       <SelectValue placeholder="Pilih kelas..." />
                     </SelectTrigger>

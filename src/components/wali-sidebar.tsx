@@ -3,16 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Users,
-  GraduationCap,
-  Layers,
-  ClipboardCheck,
-  FileText,
-  BookOpenCheck,
-  BarChart3,
-  Link2,
-  UserCog,
-  Send,
-  Settings,
   LogOut,
   ChevronRight,
   UserCircle,
@@ -39,85 +29,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-const navMain = [
+const navWali = [
   {
     title: "Beranda",
     items: [
-      {
-        title: "Dashboard",
-        url: "/dashboard",
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    title: "Manajemen",
-    items: [
-      {
-        title: "Data Santri",
-        url: "/dashboard/santri",
-        icon: Users,
-      },
-      {
-        title: "Divisi",
-        url: "/dashboard/divisi",
-        icon: Layers,
-      },
-      {
-        title: "Kelas",
-        url: "/dashboard/kelas",
-        icon: GraduationCap,
-      },
-    ],
-  },
-  {
-    title: "Akademik",
-    items: [
-      {
-        title: "Absensi",
-        url: "/dashboard/absensi",
-        icon: ClipboardCheck,
-      },
-      {
-        title: "Tugas",
-        url: "/dashboard/tugas",
-        icon: FileText,
-      },
-      {
-        title: "Submisi",
-        url: "/dashboard/submisi",
-        icon: Send,
-      },
-      {
-        title: "Jurnal",
-        url: "/dashboard/jurnal",
-        icon: BookOpenCheck,
-      },
-      {
-        title: "Nilai",
-        url: "/dashboard/nilai",
-        icon: BarChart3,
-      },
-    ],
-  },
-  {
-    title: "Wali Santri",
-    items: [
-      {
-        title: "Profil Wali",
-        url: "/dashboard/wali",
-        icon: UserCog,
-      },
-      {
-        title: "Relasi Wali–Santri",
-        url: "/dashboard/relasi",
-        icon: Link2,
-      },
+      { title: "Dashboard", url: "/wali", icon: LayoutDashboard },
     ],
   },
 ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function WaliSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -133,14 +54,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setPhotoUrl(localStorage.getItem("profile_photo"))
   }, [location.pathname])
 
-  const displayName: string = storedUser.name ?? "Admin"
-  const displayEmail: string = storedUser.email ?? "admin@manajer.id"
-  const initials = displayName
-    .split(" ")
-    .map((w: string) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
+  const displayName: string = storedUser.name ?? storedUser.fullName ?? "Wali"
+  const displayEmail: string = storedUser.email ?? ""
+  const initials = displayName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase()
 
   const handleLogout = () => {
     localStorage.removeItem("token")
@@ -153,21 +69,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="border-b border-sidebar-border pb-4">
         <div className="flex items-center gap-3 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md">
-            <GraduationCap className="h-5 w-5" />
+            <Users className="h-5 w-5" />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-bold leading-tight tracking-tight">
-              Manajer Santri
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Sistem Manajemen
-            </span>
+            <span className="text-sm font-bold leading-tight tracking-tight">Portal Wali</span>
+            <span className="text-xs text-muted-foreground">Monitoring Santri</span>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        {navMain.map((group) => (
+        {navWali.map((group) => (
           <SidebarGroup key={group.title}>
             <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -197,20 +109,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="pb-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Pengaturan"
-              render={<Link to="/dashboard/settings" />}
-            >
-              <Settings className="h-4 w-4" />
-              <span>Pengaturan</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-              >
+              <DropdownMenuTrigger className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full overflow-hidden bg-primary text-[10px] font-bold text-primary-foreground">
                   {photoUrl
                     ? <img src={photoUrl} alt="avatar" className="h-full w-full object-cover" />
@@ -224,17 +124,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <ChevronRight className="ml-auto h-4 w-4 opacity-50 group-data-[collapsible=icon]:hidden" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-52" align="start">
-                <DropdownMenuItem
-                  onClick={() => navigate("/dashboard/profile")}
-                  className="cursor-pointer"
-                >
+                <DropdownMenuItem onClick={() => navigate("/wali/profile")} className="cursor-pointer">
                   <UserCircle className="mr-2 h-4 w-4" />
                   Profil Saya
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="cursor-pointer text-red-500 focus:text-red-500"
-                >
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
                   <LogOut className="mr-2 h-4 w-4" />
                   Keluar
                 </DropdownMenuItem>

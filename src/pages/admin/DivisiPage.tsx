@@ -49,10 +49,10 @@ export default function DivisiPage() {
       const mapped = dataArray.map((d: any) => ({
         id: d.id,
         nama: d.name,
-        kode: "-", // DB does not store kode
+        kode: "-", 
         deskripsi: d.description || "",
         jumlahKelas: d.classes ? d.classes.length : 0,
-        status: "aktif" // Default to active since DB lacks this
+        status: "aktif" 
       }))
       setData(mapped)
       setError("")

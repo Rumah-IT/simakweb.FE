@@ -135,8 +135,7 @@ export default function AbsensiPage() {
     return matchSearch && matchStatus && matchClass
   })
 
-
-  const openEdit = (a: Attendance) => {
+const openEdit = (a: Attendance) => {
     setEditTarget(a)
     setForm({ classId: a.classId, santriId: a.santriId, mentorId: a.mentorId, date: a.date, status: a.status, notes: a.notes, imageUrl: a.imageUrl })
     setMenuOpen(null)
@@ -236,7 +235,7 @@ export default function AbsensiPage() {
               <SelectItem value="ALFA">Alpha</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterClass} onValueChange={setFilterClass}>
+          <Select value={filterClass} onValueChange={v => setFilterClass(v ?? "semua")}>
             <SelectTrigger id="filter-kelas-absensi" className="w-44">
               <SelectValue placeholder="Semua Kelas" />
             </SelectTrigger>
@@ -277,7 +276,7 @@ export default function AbsensiPage() {
                   <CalendarCheck className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada rekap absensi.
                 </td></tr>
               ) : filtered.map((a, idx) => {
-                const cfg = STATUS_CFG[a.status] || STATUS_CFG.ALFA // fallback
+                const cfg = STATUS_CFG[a.status] || STATUS_CFG.ALFA 
                 return (
                   <tr key={a.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
@@ -335,7 +334,7 @@ export default function AbsensiPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
-                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v })}>
+                  <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v ?? "" })}>
                     <SelectTrigger id="input-kelas-absensi" className="w-full">
                       <SelectValue placeholder="Pilih kelas..." />
                     </SelectTrigger>
@@ -346,7 +345,7 @@ export default function AbsensiPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
-                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v })}>
+                  <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v ?? "" })}>
                     <SelectTrigger id="input-santri-absensi" className="w-full">
                       <SelectValue placeholder="Pilih santri..." />
                     </SelectTrigger>
@@ -360,7 +359,7 @@ export default function AbsensiPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Mentor <span className="text-red-500">*</span></label>
-                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v })}>
+                  <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v ?? "" })}>
                     <SelectTrigger id="input-mentor-absensi" className="w-full">
                       <SelectValue placeholder="Pilih mentor..." />
                     </SelectTrigger>

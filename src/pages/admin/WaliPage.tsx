@@ -40,36 +40,33 @@ export default function WaliPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [resWali, resUsers] = await Promise.all([
-        api.WaliAPI.getAll(),
-        api.AuthAPI.getUsers()
-      ])
+      const resUsers = await api.AuthAPI.getUsers()
 
-      const wArray = Array.isArray(resWali.data) ? resWali.data : (resWali.data?.data || [])
-      const mapped = wArray.map((w: any) => ({
-        id: w.id,
-        userId: w.userId,
-        nama: w.fullName || "-",
-        telepon: w.phone || "-",
-        email: w.email || "-",
-        pekerjaan: w.job || "-",
-        alamat: w.address || "-"
+      const uArray = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || [])
+      const waliUsers = uArray.filter((u: any) => u.role === "WALI_SANTRI" || u.role === "WALI")
+
+      const mapped = waliUsers.map((u: any) => ({
+        id: u.id,
+        userId: u.id,
+        nama: u.fullName || "-",
+        telepon: u.phone || "-",
+        email: u.email || "-",
+        pekerjaan: "-",
+        alamat: "-",
       }))
       setData(mapped)
 
-      // Get users with role WALI_SANTRI to associate profile with
-      const uArray = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || [])
-      setUserList(uArray.filter((u: any) => u.role === "WALI_SANTRI").map((u: any) => ({
+      setUserList(waliUsers.map((u: any) => ({
         id: u.id,
         nama: u.fullName,
-        email: u.email
+        email: u.email,
       })))
 
       setError("")
     } catch (err: any) {
       console.error(err)
-      setError(err.message || "Gagal memuat profil wali")
-      toast.error("Gagal memuat daftar profil wali")
+      setError(err.message || "Gagal memuat data wali")
+      toast.error("Gagal memuat daftar wali")
     } finally {
       setLoading(false)
     }
@@ -81,7 +78,7 @@ export default function WaliPage() {
 
   const statCards = [
     { label: "Total Profil Wali", value: data.length, icon: UserCog, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
-    { label: "Akun Wali", value: userList.length, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-950/40" },
+    { label: "Akun Wali", value: userList.length, icon: UserCog, color: "text-sky-600", bg: "bg-sky-50 dark:bg-sky-950/40" },
   ]
 
   const filtered = data.filter(w =>
@@ -157,7 +154,7 @@ export default function WaliPage() {
           <Card key={card.label} className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
-              <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
+              <div className={`rounded-lg p-2 ${card.bg}`}>{card.icon && (() => { const Icon = card.icon; return <Icon className={`h-4 w-4 ${card.color}`} /> })()}</div>
             </CardHeader>
             <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
@@ -242,7 +239,7 @@ export default function WaliPage() {
               {!editTarget && (
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Pilih Akun Wali (User) <span className="text-red-500">*</span></label>
-                  <Select value={form.userId} onValueChange={v => setForm({ ...form, userId: v })}>
+                  <Select value={form.userId} onValueChange={v => setForm({ ...form, userId: v || "" })}>
                     <SelectTrigger id="input-userid-wali" className="w-full">
                       <SelectValue placeholder="Pilih akun..." />
                     </SelectTrigger>

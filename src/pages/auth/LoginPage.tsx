@@ -13,11 +13,13 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AuthCarousel } from "@/components/AuthCarousel"
+// @ts-ignore
+import Silk from "@/components/Silk"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string })?.from ?? "/dashboard"
+  const from = (location.state as { from?: string })?.from ?? null
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -36,7 +38,11 @@ export default function LoginPage() {
       localStorage.setItem("refreshToken", refreshToken)
       localStorage.setItem("user", JSON.stringify(user))
       
-      navigate(from, { replace: true })
+      const role: string = user?.role ?? ""
+      let defaultPath = "/dashboard"
+      if (role === "SANTRI") defaultPath = "/santri"
+      if (role === "WALI") defaultPath = "/wali"
+      navigate(from ?? defaultPath, { replace: true })
     } catch (err: unknown) {
       const apiError = err as { message?: string }
       setError(apiError?.message ?? "Email atau password salah.")
@@ -46,8 +52,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
+    <div className="relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10 overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <Silk
+          speed={5}
+          scale={1}
+          color="#4f46e5"
+          noiseIntensity={1.5}
+          rotation={0}
+        />
+      </div>
+      {/* Login card */}
+      <div className="relative z-10 w-full max-w-sm md:max-w-4xl">
         <LoginForm
           email={email}
           password={password}
@@ -96,8 +112,7 @@ function LoginForm({
                 </p>
               </div>
 
-
-              {error && (
+{error && (
                 <div className="rounded-md bg-destructive/10 px-4 py-3">
                   <FieldError className="text-center">{error}</FieldError>
                 </div>
@@ -150,8 +165,7 @@ function LoginForm({
                 </p>
               </div>
 
-
-              <FieldDescription className="text-center">
+<FieldDescription className="text-center">
                 Belum punya akun?{" "}
                 <Link
                   to="/register"
@@ -163,15 +177,11 @@ function LoginForm({
             </FieldGroup>
           </form>
 
-              
-
-          <AuthCarousel />
+<AuthCarousel />
         </CardContent>
       </Card>
 
-
-
-      <FieldDescription className="px-6 text-center">
+<FieldDescription className="px-6 text-center">
         Dengan masuk, Anda menyetujui{" "}
         <a href="#" className="underline underline-offset-4">
           Syarat Layanan

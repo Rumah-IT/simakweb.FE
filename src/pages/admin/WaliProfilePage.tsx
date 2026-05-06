@@ -9,8 +9,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import api from "@/services/api"
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 const statusConfig: Record<string, any> = {
   aktif: { label: "Aktif", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
   nonaktif: { label: "Non-Aktif", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
@@ -35,8 +33,6 @@ const activityBg: Record<string, any> = {
   jurnal: "bg-emerald-50 dark:bg-emerald-950/30",
   nilai: "bg-violet-50 dark:bg-violet-950/30",
 }
-
-// ─── Avatar component ─────────────────────────────────────────────────────────
 
 const colorPairs = [
   ["bg-violet-100 dark:bg-violet-900/50", "text-violet-700 dark:text-violet-300"],
@@ -85,53 +81,57 @@ export default function WaliProfilePage() {
       try {
         setLoading(true)
         const resSantri = await api.SantriAPI.getById(santriId)
-        
-        // Find relation for this santri
-        const resRelasi = await api.RelasiAPI.getAll()
-        const rArray = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
-        const relation = rArray.find((r: any) => r.santriId === santriId)
-        
-        if (resSantri && resSantri.data) {
-          const s = resSantri.data
+
+const raw = resSantri?.data ?? resSantri
+        const s = raw?.data ?? raw 
+
+        if (s && s.id) {
           setSantri({
             id: s.id,
-            nama: s.fullName || s.user?.fullName,
-            nis: s.nis,
-            kelas: s.santriProfile?.class?.name || "-",
-            divisi: s.santriProfile?.division?.name || "-",
-            telepon: s.user?.phone || "-",
-            alamat: s.santriProfile?.address || "-",
-            status: "aktif",
-            avatar: s.fullName || s.user?.fullName || "S"
+            nama: s.fullName ?? "-",
+            nis: s.santriProfile?.nis ?? "-",
+            kelas: s.santriProfile?.class?.name ?? s.santriProfile?.classId ?? "-",
+            divisi: s.santriProfile?.division?.name ?? "-",
+            telepon: s.phone ?? s.santriProfile?.phone ?? "-",
+            alamat: s.santriProfile?.address ?? "-",
+            status: s.isActive ? "aktif" : "nonaktif",
+            avatar: s.fullName ?? "S"
           })
-        }
 
-        if (relation && relation.wali) {
-          setWali({
-            nama: relation.wali.fullName,
-            email: relation.wali.email,
-            telepon: relation.wali.phone || "-",
-            pekerjaan: "-", // Would need to fetch WaliProfile for this
-            alamat: "-", 
-            hubungan: relation.category,
-            avatar: relation.wali.fullName || "W"
-          })
-        } else {
-          setWali({
-            nama: "Belum ditambahkan",
-            email: "-",
-            telepon: "-",
-            pekerjaan: "-",
-            alamat: "-", 
-            hubungan: "OTHER",
-            avatar: "W"
-          })
-        }
+try {
+            const resRelasi = await api.RelasiAPI.getAll()
+            const rArray = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
+            const relation = rArray.find((r: any) => r.santriId === santriId)
 
-        // Mock activities for now since they require complex fetching
-        setActivities([
-          { type: "absensi", label: "Hadir", date: new Date().toLocaleDateString(), detail: "Absensi harian" }
-        ])
+            if (relation && relation.wali) {
+              setWali({
+                nama: relation.wali.fullName ?? "-",
+                email: relation.wali.email ?? "-",
+                telepon: relation.wali.phone ?? "-",
+                pekerjaan: "-",
+                alamat: "-",
+                hubungan: relation.category ?? "OTHER",
+                avatar: relation.wali.fullName ?? "W"
+              })
+            } else {
+              setWali({
+                nama: "Belum ditambahkan",
+                email: "-",
+                telepon: "-",
+                pekerjaan: "-",
+                alamat: "-",
+                hubungan: "OTHER",
+                avatar: "W"
+              })
+            }
+          } catch {
+            setWali({ nama: "Belum ditambahkan", email: "-", telepon: "-", pekerjaan: "-", alamat: "-", hubungan: "OTHER", avatar: "W" })
+          }
+
+          setActivities([
+            { type: "absensi", label: "Hadir", date: new Date().toLocaleDateString(), detail: "Absensi harian" }
+          ])
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -211,17 +211,6 @@ export default function WaliProfilePage() {
                 <Phone className="h-4 w-4" />
                 <span>{santri.telepon}</span>
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl bg-background/80 backdrop-blur-sm px-4 py-3 ring-1 ring-border/60 shadow-sm">
-            <Avatar initials={wali?.avatar || "W"} size="md" />
-            <div>
-              <p className="text-xs text-muted-foreground">Wali / Orang Tua</p>
-              <p className="text-sm font-semibold leading-tight">{wali?.nama}</p>
-              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${hubunganCfg.className}`}>
-                {hubunganCfg.label}
-              </span>
             </div>
           </div>
         </div>
