@@ -102,12 +102,12 @@ export default function SantriTugasPage() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Tugas</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Tugas</h1>
         </div>
         <p className="text-sm text-muted-foreground">Daftar tugas yang tersedia di kelasmu.</p>
       </div>
 
-<div className="grid gap-4 sm:grid-cols-3">
+<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: "Total Tugas", value: data.length, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40", icon: FileText },
           { label: "Segera Deadline", value: data.filter(t => t.dueDate && isDueSoon(t.dueDate)).length, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/40", icon: Clock },
@@ -129,7 +129,7 @@ export default function SantriTugasPage() {
         ))}
       </div>
 
-<div className="relative max-w-sm">
+<div className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
           type="text"

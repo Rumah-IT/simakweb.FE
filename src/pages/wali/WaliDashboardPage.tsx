@@ -31,13 +31,13 @@ export default function WaliDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Wali</h2>
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard Wali</h2>
         <p className="text-muted-foreground">
           Selamat datang, {user?.fullName || user?.name || "Wali Santri"}. Berikut adalah daftar santri yang terkait dengan Anda.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -58,7 +58,7 @@ export default function WaliDashboardPage() {
         ) : relasi.length === 0 ? (
           <p className="text-muted-foreground">Tidak ada santri yang terkait.</p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {relasi.map((r) => (
               <Card key={r.id} className="overflow-hidden">
                 <div className="bg-primary/10 p-4 flex justify-center items-center">

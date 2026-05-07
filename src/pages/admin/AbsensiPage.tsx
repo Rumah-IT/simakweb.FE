@@ -198,14 +198,14 @@ const openEdit = (a: Attendance) => {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Absensi</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Absensi</h1>
         </div>
         <p className="text-sm text-muted-foreground">
           Rekap kehadiran santri per kelas per hari. Satu santri hanya dapat diabsen satu kali per kelas per tanggal.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map(card => (
           <Card key={card.label} className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -324,7 +324,7 @@ const openEdit = (a: Attendance) => {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
-          <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
+          <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-4 md:p-6" onClick={e => e.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold">{editTarget ? "Edit Absensi" : "Catat Absensi"}</h2>
               <button onClick={() => setModalOpen(false)} className="rounded-md p-1.5 transition hover:bg-muted"><X className="h-4 w-4" /></button>
