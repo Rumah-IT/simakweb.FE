@@ -97,7 +97,7 @@ mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         </p>
       </div>
 
-<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
           { label: "Total Rekap", value: counts.total, icon: CalendarCheck, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
           { label: "Hadir", value: counts.hadir, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
@@ -112,7 +112,7 @@ mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>
+              <div className={`text-2xl md:text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>
                 {loading ? "—" : card.value}
               </div>
             </CardContent>

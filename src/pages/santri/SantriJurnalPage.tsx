@@ -139,7 +139,7 @@ export default function SantriJurnalPage() {
         <p className="text-sm text-muted-foreground">Catat dan pantau perkembangan harian santri.</p>
       </div>
 
-<div className="grid gap-4 sm:grid-cols-2">
+<div className="grid gap-4 grid-cols-2">
         <Card className="border-0 shadow-sm ring-1 ring-border/60 transition-all hover:shadow-md hover:-translate-y-0.5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Jurnal</CardTitle>
@@ -148,7 +148,7 @@ export default function SantriJurnalPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>
+            <div className={`text-2xl md:text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>
               {loading ? "—" : data.length}
             </div>
           </CardContent>
@@ -161,7 +161,7 @@ export default function SantriJurnalPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>
+            <div className={`text-2xl md:text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>
               {loading ? "—" : data.filter(j => j.date.startsWith(new Date().toISOString().slice(0, 7))).length}
             </div>
           </CardContent>

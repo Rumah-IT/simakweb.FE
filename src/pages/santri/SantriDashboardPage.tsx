@@ -79,7 +79,7 @@ export default function SantriDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
           { title: "Kehadiran", value: loading ? "—" : `${persenHadir}%`, sub: `${stats.hadir} dari ${totalAbsensi} pertemuan`, icon: ClipboardCheck, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
           { title: "Total Tugas", value: loading ? "—" : stats.tugas, sub: "Tugas tersedia di kelasmu", icon: FileText, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/40" },
@@ -94,7 +94,7 @@ export default function SantriDashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold tracking-tight ${loading ? "animate-pulse text-muted-foreground/40" : ""}`}>{card.value}</div>
+              <div className={`text-2xl md:text-3xl font-bold tracking-tight ${loading ? "animate-pulse text-muted-foreground/40" : ""}`}>{card.value}</div>
               <p className="mt-1 text-xs text-muted-foreground">{card.sub}</p>
             </CardContent>
           </Card>
