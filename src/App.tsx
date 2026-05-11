@@ -37,12 +37,16 @@ import WaliDashboardPage from './pages/wali/WaliDashboardPage'
 
 function RoleRedirect() {
   try {
+    const token = localStorage.getItem("token")
+    if (!token) return <Navigate to="/login" replace />
+
     const user = JSON.parse(localStorage.getItem("user") ?? "{}")
     const role: string = user?.role ?? ""
     if (role === "SANTRI") return <Navigate to="/santri" replace />
-    if (role === "WALI") return <Navigate to="/wali" replace />
+    if (role === "WALI" || role === "WALI_SANTRI") return <Navigate to="/wali" replace />
+    if (role === "ADMIN" || role === "SUPERADMIN" || role === "MENTOR") return <Navigate to="/dashboard" replace />
   } catch {}
-  return <Navigate to="/dashboard" replace />
+  return <Navigate to="/login" replace />
 }
 
 function App() {
@@ -56,7 +60,7 @@ function App() {
       <Route path="/otp" element={<OtpPage />} />
       <Route path="/dev/beranda" element={<Beranda />} />
 
-<Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "MENTOR"]} />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardPage />} />
 
@@ -79,7 +83,7 @@ function App() {
         </Route>
       </Route>
 
-<Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute allowedRoles={["SANTRI"]} />}>
         <Route path="/santri" element={<SantriLayout />}>
           <Route index element={<SantriDashboardPage />} />
           <Route path="absensi" element={<SantriAbsensiPage />} />
@@ -90,7 +94,7 @@ function App() {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute allowedRoles={["WALI_SANTRI", "WALI"]} />}>
         <Route path="/wali" element={<WaliLayout />}>
           <Route index element={<WaliDashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
