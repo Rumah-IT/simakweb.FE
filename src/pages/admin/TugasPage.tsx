@@ -56,6 +56,7 @@ export default function TugasPage() {
 
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState<string>("semua")
+  const [filterClass, setFilterClass] = useState<string>("semua")
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Tugas | null>(null)
@@ -114,7 +115,8 @@ export default function TugasPage() {
   const filtered = data.filter(t => {
     const matchSearch = t.title.toLowerCase().includes(search.toLowerCase()) || t.className.toLowerCase().includes(search.toLowerCase())
     const matchStatus = filterStatus === "semua" || t.status === filterStatus
-    return matchSearch && matchStatus
+    const matchClass = filterClass === "semua" || t.classId === filterClass
+    return matchSearch && matchStatus && matchClass
   })
 
 const openEdit = (t: Tugas) => {
@@ -205,6 +207,15 @@ const openEdit = (t: Tugas) => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input id="search-tugas" type="text" placeholder="Cari judul tugas atau kelas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none ring-0 transition focus:ring-2 focus:ring-primary/30" />
           </div>
+          <Select value={filterClass} onValueChange={v => setFilterClass(v || "")}>
+            <SelectTrigger id="filter-kelas-tugas" className="w-40">
+              <SelectValue placeholder="Semua Kelas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua Kelas</SelectItem>
+              {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Select value={filterStatus} onValueChange={v => setFilterStatus(v || "")}>
             <SelectTrigger id="filter-status-tugas" className="w-36">
               <SelectValue placeholder="Semua Status" />
@@ -304,7 +315,9 @@ const openEdit = (t: Tugas) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
                   <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v || "" })}>
                     <SelectTrigger id="input-kelas-tugas" className="w-full">
-                      <SelectValue placeholder="Pilih kelas..." />
+                      <SelectValue placeholder="Pilih kelas...">
+                        {form.classId ? classesList.find(k => k.id === form.classId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
@@ -315,7 +328,9 @@ const openEdit = (t: Tugas) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Mentor Pembuat <span className="text-red-500">*</span></label>
                   <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v || "" })}>
                     <SelectTrigger id="input-mentor-tugas" className="w-full">
-                      <SelectValue placeholder="Pilih mentor..." />
+                      <SelectValue placeholder="Pilih mentor...">
+                        {form.mentorId ? mentorsList.find(m => m.id === form.mentorId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {mentorsList.map(m => <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>)}

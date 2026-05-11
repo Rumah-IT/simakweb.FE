@@ -241,7 +241,9 @@ export default function WaliPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Pilih Akun Wali (User) <span className="text-red-500">*</span></label>
                   <Select value={form.userId} onValueChange={v => setForm({ ...form, userId: v || "" })}>
                     <SelectTrigger id="input-userid-wali" className="w-full">
-                      <SelectValue placeholder="Pilih akun..." />
+                      <SelectValue placeholder="Pilih akun...">
+                        {form.userId ? userList.find(u => u.id === form.userId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {userList.map(u => <SelectItem key={u.id} value={u.id}>{u.nama} ({u.email})</SelectItem>)}

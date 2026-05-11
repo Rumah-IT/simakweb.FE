@@ -336,7 +336,9 @@ const openEdit = (a: Attendance) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
                   <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v ?? "" })}>
                     <SelectTrigger id="input-kelas-absensi" className="w-full">
-                      <SelectValue placeholder="Pilih kelas..." />
+                      <SelectValue placeholder="Pilih kelas...">
+                        {form.classId ? classesList.find(k => k.id === form.classId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
@@ -347,7 +349,9 @@ const openEdit = (a: Attendance) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
                   <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v ?? "" })}>
                     <SelectTrigger id="input-santri-absensi" className="w-full">
-                      <SelectValue placeholder="Pilih santri..." />
+                      <SelectValue placeholder="Pilih santri...">
+                        {form.santriId ? santriList.find(s => s.id === form.santriId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {santriList.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} ({s.nis})</SelectItem>)}
@@ -361,7 +365,9 @@ const openEdit = (a: Attendance) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Mentor <span className="text-red-500">*</span></label>
                   <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v ?? "" })}>
                     <SelectTrigger id="input-mentor-absensi" className="w-full">
-                      <SelectValue placeholder="Pilih mentor..." />
+                      <SelectValue placeholder="Pilih mentor...">
+                        {form.mentorId ? mentorList.find(m => m.id === form.mentorId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {mentorList.map(m => <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>)}

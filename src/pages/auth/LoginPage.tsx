@@ -41,7 +41,7 @@ export default function LoginPage() {
       const role: string = user?.role ?? ""
       let defaultPath = "/dashboard"
       if (role === "SANTRI") defaultPath = "/santri"
-      if (role === "WALI") defaultPath = "/wali"
+      if (role === "WALI" || role === "WALI_SANTRI") defaultPath = "/wali"
       navigate(from ?? defaultPath, { replace: true })
     } catch (err: unknown) {
       const apiError = err as { message?: string }

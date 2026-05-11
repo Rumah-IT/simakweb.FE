@@ -287,7 +287,9 @@ const handleSave = async () => {
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Akun Santri <span className="text-red-500">*</span></label>
                 <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v || "" })}>
                   <SelectTrigger id="input-santri-relasi" className="w-full">
-                    <SelectValue placeholder="Pilih santri..." />
+                    <SelectValue placeholder="Pilih santri...">
+                      {form.santriId ? santriList.find(s => s.id === form.santriId)?.nama : undefined}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {santriList.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} - {s.nis}</SelectItem>)}
@@ -300,7 +302,9 @@ const handleSave = async () => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Akun Wali <span className="text-red-500">*</span></label>
                   <Select value={form.waliId} onValueChange={v => setForm({ ...form, waliId: v || "" })}>
                     <SelectTrigger id="input-wali-relasi" className="w-full">
-                      <SelectValue placeholder="Pilih wali..." />
+                      <SelectValue placeholder="Pilih wali...">
+                        {form.waliId ? waliList.find(w => w.id === form.waliId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {waliList.map(w => <SelectItem key={w.id} value={w.id}>{w.nama}</SelectItem>)}

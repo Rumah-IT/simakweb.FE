@@ -71,6 +71,7 @@ export default function NilaiPage() {
 
   const [search, setSearch] = useState("")
   const [filterPredikat, setFilterPredikat] = useState("semua")
+  const [filterClass, setFilterClass] = useState("semua")
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Nilai | null>(null)
@@ -140,7 +141,8 @@ export default function NilaiPage() {
     const q = search.toLowerCase()
     const matchSearch = n.santriName.toLowerCase().includes(q) || n.className.toLowerCase().includes(q)
     const matchPred = filterPredikat === "semua" || n.predikat === filterPredikat
-    return matchSearch && matchPred
+    const matchClass = filterClass === "semua" || n.classId === filterClass
+    return matchSearch && matchPred && matchClass
   })
 
   const openEdit = (n: Nilai) => { 
@@ -250,6 +252,15 @@ export default function NilaiPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input id="search-nilai" type="text" placeholder="Cari santri atau kelas..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
           </div>
+          <Select value={filterClass} onValueChange={v => setFilterClass(v || "")}>
+            <SelectTrigger id="filter-kelas-nilai" className="w-40">
+              <SelectValue placeholder="Semua Kelas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua Kelas</SelectItem>
+              {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Select value={filterPredikat} onValueChange={v => setFilterPredikat(v || "")}>
             <SelectTrigger id="filter-predikat-nilai" className="w-40">
               <SelectValue placeholder="Semua Predikat" />
@@ -263,8 +274,10 @@ export default function NilaiPage() {
             </SelectContent>
           </Select>
         </div>
-
       </div>
+
+  
+
 
       <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
         {loading && (
@@ -345,7 +358,9 @@ export default function NilaiPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Santri <span className="text-red-500">*</span></label>
                   <Select value={form.santriId} onValueChange={v => setForm({ ...form, santriId: v || "" })}>
                     <SelectTrigger id="input-santri-nilai" className="w-full">
-                      <SelectValue placeholder="Pilih santri..." />
+                      <SelectValue placeholder="Pilih santri...">
+                        {form.santriId ? santriList.find(s => s.id === form.santriId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {santriList.map(s => <SelectItem key={s.id} value={s.id}>{s.nama} ({s.nis})</SelectItem>)}
@@ -356,7 +371,9 @@ export default function NilaiPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
                   <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v || "" })}>
                     <SelectTrigger id="input-kelas-nilai" className="w-full">
-                      <SelectValue placeholder="Pilih kelas..." />
+                      <SelectValue placeholder="Pilih kelas...">
+                        {form.classId ? classesList.find(k => k.id === form.classId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
