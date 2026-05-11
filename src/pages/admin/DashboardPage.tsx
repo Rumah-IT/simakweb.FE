@@ -166,7 +166,7 @@ setRecentActivities([
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Dashboard</h1>
         </div>
         <p className="text-sm text-muted-foreground">
           Selamat datang kembali,{" "}
@@ -175,7 +175,7 @@ setRecentActivities([
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <Card
             key={card.title}
@@ -191,7 +191,7 @@ setRecentActivities([
             </CardHeader>
             <CardContent>
               <div
-                className={`text-3xl font-bold tracking-tight transition-all duration-500 ${
+                className={`text-2xl md:text-3xl font-bold tracking-tight transition-all duration-500 ${
                   loading ? "animate-pulse text-muted-foreground/40" : ""
                 }`}
               >
@@ -217,7 +217,7 @@ setRecentActivities([
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-4">
           <h2 className="text-base font-semibold">Aksi Cepat</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 grid-cols-2">
             {quickActions.map((action) => (
               <a
                 key={action.title}

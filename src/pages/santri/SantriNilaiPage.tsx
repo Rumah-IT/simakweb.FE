@@ -76,7 +76,7 @@ export default function SantriNilaiPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>{card.value}</div>
+              <div className={`text-2xl md:text-3xl font-bold tracking-tight ${loading ? "opacity-40 animate-pulse" : ""}`}>{card.value}</div>
             </CardContent>
           </Card>
         ))}
@@ -98,7 +98,7 @@ export default function SantriNilaiPage() {
           <p className="text-sm">Belum ada data evaluasi nilai.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
           {data.map((n: any) => {
             const grade = getGrade(n.finalScore ?? 0)
             return (

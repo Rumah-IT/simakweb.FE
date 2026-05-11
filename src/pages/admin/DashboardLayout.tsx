@@ -34,7 +34,7 @@ export default function DashboardLayout() {
             </Breadcrumb>
           </header>
 
-          <main className="flex flex-1 flex-col gap-4 p-6 bg-muted/20 min-h-[calc(100vh-4rem)]">
+          <main className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-muted/20 min-h-[calc(100vh-4rem)]">
             <Outlet />
           </main>
         </SidebarInset>

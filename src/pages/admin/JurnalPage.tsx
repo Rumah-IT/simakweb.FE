@@ -61,13 +61,13 @@ export default function JurnalPage() {
       const jArray = Array.isArray(resJournals.data) ? resJournals.data : (resJournals.data?.data || [])
       const mapped = jArray.map((j: any) => ({
         id: j.id,
-        santriId: j.santriId,
+        santriId: j.santriId || "",
         santriName: j.santri?.fullName || "-",
         nis: j.santri?.nis || "-",
-        classId: j.classId,
+        classId: j.classId || "",
         className: j.class?.name || "-",
         date: j.date ? j.date.split("T")[0] : "",
-        activity: j.activity,
+        activity: j.activity || "",
         notes: j.notes || "",
       }))
       setData(mapped)
@@ -87,7 +87,9 @@ export default function JurnalPage() {
 
   const filtered = data.filter(j => {
     const q = search.toLowerCase()
-    return j.santriName.toLowerCase().includes(q) || j.className.toLowerCase().includes(q) || j.activity.toLowerCase().includes(q)
+    return (j.santriName ?? "").toLowerCase().includes(q) 
+      || (j.className ?? "").toLowerCase().includes(q) 
+      || (j.activity ?? "").toLowerCase().includes(q)
   })
 
 const openEdit = (j: Jurnal) => { 
@@ -152,13 +154,13 @@ const openEdit = (j: Jurnal) => {
         <p className="text-sm text-muted-foreground">Catat dan pantau perkembangan harian santri.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2">
         <Card className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Jurnal</CardTitle>
             <div className="rounded-lg p-2 bg-violet-50 dark:bg-violet-950/40"><BookOpenCheck className="h-4 w-4 text-violet-600" /></div>
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : data.length}</div></CardContent>
+          <CardContent><div className="text-2xl md:text-3xl font-bold tracking-tight">{loading ? "..." : data.length}</div></CardContent>
         </Card>
       </div>
 
@@ -198,7 +200,7 @@ const openEdit = (j: Jurnal) => {
               </tr>
             </thead>
             <tbody>
-              {!loading && filtered.length === 0 ? (
+              {loading ? null : filtered.length === 0 ? (
                 <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><BookOpen className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada jurnal ditemukan.</td></tr>
               ) : filtered.map((j, idx) => {
                 return (

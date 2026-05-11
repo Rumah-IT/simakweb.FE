@@ -157,14 +157,14 @@ export default function KelasPage() {
         <p className="text-sm text-muted-foreground">Kelola data kelas yang tersedia di setiap divisi.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {statCards.map(card => (
           <Card key={card.label} className="border-0 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
               <div className={`rounded-lg p-2 ${card.bg}`}><card.icon className={`h-4 w-4 ${card.color}`} /></div>
             </CardHeader>
-            <CardContent><div className="text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
+            <CardContent><div className="text-2xl md:text-3xl font-bold tracking-tight">{loading ? "..." : card.value}</div></CardContent>
           </Card>
         ))}
       </div>
