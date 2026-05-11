@@ -304,7 +304,9 @@ const openEdit = (t: Tugas) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kelas <span className="text-red-500">*</span></label>
                   <Select value={form.classId} onValueChange={v => setForm({ ...form, classId: v || "" })}>
                     <SelectTrigger id="input-kelas-tugas" className="w-full">
-                      <SelectValue placeholder="Pilih kelas..." />
+                      <SelectValue placeholder="Pilih kelas...">
+                        {form.classId ? classesList.find(k => k.id === form.classId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {classesList.map(k => <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>)}
@@ -315,7 +317,9 @@ const openEdit = (t: Tugas) => {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Mentor Pembuat <span className="text-red-500">*</span></label>
                   <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v || "" })}>
                     <SelectTrigger id="input-mentor-tugas" className="w-full">
-                      <SelectValue placeholder="Pilih mentor..." />
+                      <SelectValue placeholder="Pilih mentor...">
+                        {form.mentorId ? mentorsList.find(m => m.id === form.mentorId)?.nama : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {mentorsList.map(m => <SelectItem key={m.id} value={m.id}>{m.nama}</SelectItem>)}

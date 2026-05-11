@@ -466,7 +466,11 @@ export default function SantriPage() {
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Akun Wali</label>
                   <Select value={relasiForm.waliId} onValueChange={v => setRelasiForm({ ...relasiForm, waliId: v || "" })}>
-                    <SelectTrigger className="w-full"><SelectValue placeholder="Pilih wali..." /></SelectTrigger>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Pilih wali...">
+                        {relasiForm.waliId ? waliList.find(w => w.id === relasiForm.waliId)?.nama : undefined}
+                      </SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
                       {waliList.map(w => <SelectItem key={w.id} value={w.id}>{w.nama}</SelectItem>)}
                     </SelectContent>

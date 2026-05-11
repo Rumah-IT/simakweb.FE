@@ -275,7 +275,9 @@ export default function KelasPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Divisi <span className="text-red-500">*</span></label>
                   <Select value={form.divisiId} onValueChange={v => setForm({ ...form, divisiId: v || "" })}>
                     <SelectTrigger id="input-divisi-kelas" className="w-full">
-                      <SelectValue placeholder="Pilih Divisi" />
+                      <SelectValue placeholder="Pilih Divisi">
+                        {form.divisiId ? divisions.find(d => d.id === form.divisiId)?.name : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {divisions.map(d => (
@@ -290,7 +292,9 @@ export default function KelasPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Pengajar (Mentor) <span className="text-red-500">*</span></label>
                   <Select value={form.mentorId} onValueChange={v => setForm({ ...form, mentorId: v || "" })}>
                     <SelectTrigger id="input-mentor-kelas" className="w-full">
-                      <SelectValue placeholder="Pilih Mentor" />
+                      <SelectValue placeholder="Pilih Mentor">
+                        {form.mentorId ? mentors.find(m => m.id === form.mentorId)?.fullName : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {mentors.map(m => (
