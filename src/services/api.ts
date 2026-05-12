@@ -79,7 +79,7 @@ export const RelasiAPI = {
 };
 
 export const DivisiAPI = {
-  getAll: () => fetchWrapper('/divisions'),
+  getAll: () => fetchWrapper('/divisions?limit=1000'),
   create: (data: any) => fetchWrapper('/divisions', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => fetchWrapper(`/divisions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => fetchWrapper(`/divisions/${id}`, { method: 'DELETE' }),
