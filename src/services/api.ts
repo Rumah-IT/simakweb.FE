@@ -49,6 +49,7 @@ export const AuthAPI = {
 export const UserAPI = {
   getAll: () => fetchWrapper('/users?limit=1000'),
   getById: (id: string) => fetchWrapper(`/users/${id}`),
+  create: (data: any) => fetchWrapper('/users', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => fetchWrapper(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => fetchWrapper(`/users/${id}`, { method: 'DELETE' }),
 };

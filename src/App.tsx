@@ -24,6 +24,7 @@ import JurnalPage from './pages/admin/JurnalPage'
 import NilaiPage from './pages/admin/NilaiPage'
 import WaliPage from './pages/admin/WaliPage'
 import RelasiPage from './pages/admin/RelasiPage'
+import MentorPage from './pages/admin/MentorPage'
 
 import SantriLayout from './pages/santri/SantriLayout'
 import SantriDashboardPage from './pages/santri/SantriDashboardPage'
@@ -35,6 +36,13 @@ import SantriJurnalPage from './pages/santri/SantriJurnalPage'
 import WaliLayout from './pages/wali/WaliLayout'
 import WaliDashboardPage from './pages/wali/WaliDashboardPage'
 
+import MentorLayout from './pages/mentor/MentorLayout'
+import MentorDashboardPage from './pages/mentor/MentorDashboardPage'
+import MentorKelasPage from './pages/mentor/MentorKelasPage'
+import MentorSantriPage from './pages/mentor/MentorSantriPage'
+import MentorJurnalPage from './pages/mentor/MentorJurnalPage'
+import MentorNilaiPage from './pages/mentor/MentorNilaiPage'
+
 function RoleRedirect() {
   try {
     const token = localStorage.getItem("token")
@@ -44,7 +52,8 @@ function RoleRedirect() {
     const role: string = user?.role ?? ""
     if (role === "SANTRI") return <Navigate to="/santri" replace />
     if (role === "WALI" || role === "WALI_SANTRI") return <Navigate to="/wali" replace />
-    if (role === "ADMIN" || role === "SUPERADMIN" || role === "MENTOR") return <Navigate to="/dashboard" replace />
+    if (role === "MENTOR") return <Navigate to="/mentor" replace />
+    if (role === "ADMIN" || role === "SUPERADMIN") return <Navigate to="/dashboard" replace />
   } catch {}
   return <Navigate to="/login" replace />
 }
@@ -60,12 +69,13 @@ function App() {
       <Route path="/otp" element={<OtpPage />} />
       <Route path="/dev/beranda" element={<Beranda />} />
 
-      <Route element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "MENTOR"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN"]} />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardPage />} />
 
-<Route path="santri" element={<SantriPage />} />
+          <Route path="santri" element={<SantriPage />} />
           <Route path="santri/:santriId/wali-profile" element={<WaliProfilePage />} />
+          <Route path="mentor" element={<MentorPage />} />
           <Route path="divisi" element={<DivisiPage />} />
           <Route path="kelas" element={<KelasPage />} />
 
@@ -97,6 +107,17 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={["WALI_SANTRI", "WALI"]} />}>
         <Route path="/wali" element={<WaliLayout />}>
           <Route index element={<WaliDashboardPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={["MENTOR"]} />}>
+        <Route path="/mentor" element={<MentorLayout />}>
+          <Route index element={<MentorDashboardPage />} />
+          <Route path="kelas" element={<MentorKelasPage />} />
+          <Route path="santri" element={<MentorSantriPage />} />
+          <Route path="jurnal" element={<MentorJurnalPage />} />
+          <Route path="nilai" element={<MentorNilaiPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>

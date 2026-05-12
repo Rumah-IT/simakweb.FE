@@ -7,6 +7,7 @@ import {
   Pencil,
   Trash2,
   X,
+  Plus,
   CheckCircle2,
   XCircle,
   BookOpen,
@@ -148,7 +149,14 @@ export default function DivisiPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input id="search-divisi" type="text" placeholder="Cari nama divisi..." value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
         </div>
-
+        <button
+          id="btn-tambah-divisi"
+          onClick={() => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" />
+          Tambah Divisi
+        </button>
       </div>
 
       <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
