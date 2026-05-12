@@ -7,6 +7,7 @@ import {
   Pencil,
   Trash2,
   X,
+  Plus,
   Users,
   CheckCircle2,
   XCircle,
@@ -185,7 +186,14 @@ export default function KelasPage() {
             </SelectContent>
           </Select>
         </div>
-
+        <button
+          id="btn-tambah-kelas"
+          onClick={() => { setEditTarget(null); setForm(emptyForm); setModalOpen(true) }}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" />
+          Tambah Kelas
+        </button>
       </div>
 
       <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">

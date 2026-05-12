@@ -27,7 +27,8 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
         // Redirect to appropriate dashboard based on role
         if (role === "SANTRI") return <Navigate to="/santri" replace />
         if (role === "WALI" || role === "WALI_SANTRI") return <Navigate to="/wali" replace />
-        if (role === "ADMIN" || role === "SUPERADMIN" || role === "MENTOR") return <Navigate to="/dashboard" replace />
+        if (role === "MENTOR") return <Navigate to="/mentor" replace />
+        if (role === "ADMIN" || role === "SUPERADMIN") return <Navigate to="/dashboard" replace />
         
         // Fallback for unknown roles
         return <Navigate to="/login" replace />
