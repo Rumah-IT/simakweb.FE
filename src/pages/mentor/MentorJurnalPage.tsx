@@ -11,7 +11,6 @@ export default function MentorJurnalPage() {
   const user = loadUser()
   const mentorId: string = user.id ?? ""
 
-  const [myKelasIds, setMyKelasIds] = useState<string[]>([])
   const [journals, setJournals] = useState<any[]>([])
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
@@ -28,10 +27,8 @@ export default function MentorJurnalPage() {
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
         const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
         const ids = myKelas.map((k: any) => k.id)
-        setMyKelasIds(ids)
 
         const jArr = Array.isArray(resJurnal?.data) ? resJurnal.data : (resJurnal?.data?.data ?? [])
-        // Filter journals yang berasal dari santri di kelas mentor
         const filtered = jArr.filter((j: any) => ids.includes(j.classId) || ids.includes(j.class?.id))
         setJournals(filtered)
         setError("")

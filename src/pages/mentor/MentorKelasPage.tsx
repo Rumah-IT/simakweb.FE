@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { GraduationCap, Users, BookOpenCheck, Loader2, AlertCircle, ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { ClassAPI } from "@/services/api"
 
 function loadUser() {
