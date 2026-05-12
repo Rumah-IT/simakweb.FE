@@ -86,7 +86,7 @@ export const DivisiAPI = {
 };
 
 export const ClassAPI = {
-  getAll: () => fetchWrapper('/classes'),
+  getAll: () => fetchWrapper('/classes?limit=1000'),
   getById: (id: string) => fetchWrapper(`/classes/${id}`),
   getByDivisi: (divisiId: string) => fetchWrapper(`/divisions/${divisiId}/classes`),
   create: (data: any) => fetchWrapper('/classes', { method: 'POST', body: JSON.stringify(data) }),
