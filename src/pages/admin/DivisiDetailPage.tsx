@@ -6,7 +6,8 @@ import {
   Loader2, AlertCircle, ChevronRight, Plus, X, Loader
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DivisiAPI, ClassAPI } from "@/services/api"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DivisiAPI, ClassAPI, AuthAPI } from "@/services/api"
 
 interface KelasItem {
   id: string
@@ -31,7 +32,6 @@ export default function DivisiDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
-  // State untuk tambah kelas inline
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [mentors, setMentors] = useState<{ id: string; fullName: string }[]>([])
   const [newKelasName, setNewKelasName] = useState("")
@@ -66,7 +66,6 @@ export default function DivisiDetailPage() {
 
   const fetchMentors = async () => {
     try {
-      const { AuthAPI } = await import("@/services/api")
       const res = await AuthAPI.getMentors()
       const arr = Array.isArray(res?.data) ? res.data : (res?.data?.data ?? [])
       setMentors(arr)
@@ -257,16 +256,18 @@ export default function DivisiDetailPage() {
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                   Mentor <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={newMentorId}
-                  onChange={e => setNewMentorId(e.target.value)}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="">-- Pilih Mentor --</option>
-                  {mentors.map(m => (
-                    <option key={m.id} value={m.id}>{m.fullName}</option>
-                  ))}
-                </select>
+                <Select value={newMentorId} onValueChange={v => setNewMentorId(v || "")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="-- Pilih Mentor --">
+                      {newMentorId ? mentors.find(m => m.id === newMentorId)?.fullName : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mentors.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
