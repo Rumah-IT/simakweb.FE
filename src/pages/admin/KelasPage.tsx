@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import api from "@/services/api"
 
 interface Kelas {
@@ -35,6 +35,8 @@ interface Kelas {
 const emptyForm: Omit<Kelas, "id" | "jumlahSantri" | "divisi" | "pengajar"> = { nama: "", divisiId: "", kapasitas: 30, status: "aktif", mentorId: "" }
 
 export default function KelasPage() {
+  const navigate = useNavigate()
+
   const [data, setData] = useState<Kelas[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -229,16 +231,13 @@ export default function KelasPage() {
               ) : filtered.map((k, idx) => {
                 const fillPct = Math.round((k.jumlahSantri / k.kapasitas) * 100)
                 return (
-                  <tr key={k.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
+                  <tr
+                    key={k.id}
+                    onClick={() => navigate(`/dashboard/kelas/${k.id}`)}
+                    className="border-b last:border-0 transition-colors hover:bg-muted/50 cursor-pointer"
+                  >
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
-                    <td className="px-4 py-3">
-                      <Link
-                        to={`/dashboard/kelas/${k.id}`}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        {k.nama}
-                      </Link>
-                    </td>
+                    <td className="px-4 py-3 font-medium">{k.nama}</td>
                     <td className="px-4 py-3 text-muted-foreground">{k.divisi}</td>
                     <td className="px-4 py-3">{k.pengajar}</td>
                     <td className="px-4 py-3">
@@ -255,9 +254,11 @@ export default function KelasPage() {
                         : <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"><XCircle className="h-3 w-3" />Non-Aktif</span>
                       }
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <div className="relative inline-block">
-                        <button id={`menu-kelas-${k.id}`} onClick={() => setMenuOpen(menuOpen === k.id ? null : k.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
+                        <button id={`menu-kelas-${k.id}`} onClick={() => setMenuOpen(menuOpen === k.id ? null : k.id)} className="rounded-md p-1.5 transition hover:bg-muted">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
                         {menuOpen === k.id && (
                           <div className="absolute right-0 top-8 z-20 min-w-[130px] rounded-lg border bg-popover shadow-lg">
                             <button onClick={() => openEdit(k)} className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"><Pencil className="h-3.5 w-3.5" />Edit</button>

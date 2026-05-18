@@ -49,16 +49,16 @@ const predikatConfig: Record<Nilai["predikat"], string> = {
 type FormState = {
   santriId: string
   classId: string
-  bulan: string 
-  taskAvg: number
-  attitudeAvg: number
-  attendancePoin: number
-  maxAttendPoin: number
+  bulan: string
+  taskAvg: string
+  attitudeAvg: string
+  attendancePoin: string
+  maxAttendPoin: string
   notes: string
 }
 
 const currentYearMonth = new Date().toISOString().slice(0, 7)
-const emptyForm: FormState = { santriId: "", classId: "", bulan: currentYearMonth, taskAvg: 0, attitudeAvg: 0, attendancePoin: 0, maxAttendPoin: 100, notes: "" }
+const emptyForm: FormState = { santriId: "", classId: "", bulan: currentYearMonth, taskAvg: "", attitudeAvg: "", attendancePoin: "", maxAttendPoin: "100", notes: "" }
 
 export default function NilaiPage() {
   const [data, setData] = useState<Nilai[]>([])
@@ -152,10 +152,10 @@ export default function NilaiPage() {
       santriId: n.santriId, 
       classId: n.classId, 
       bulan: `${n.year}-${monthStr}`, 
-      taskAvg: n.taskAvg, 
-      attitudeAvg: n.attitudeAvg, 
-      attendancePoin: n.attendancePoin,
-      maxAttendPoin: n.maxAttendPoin,
+      taskAvg: String(n.taskAvg), 
+      attitudeAvg: String(n.attitudeAvg), 
+      attendancePoin: String(n.attendancePoin),
+      maxAttendPoin: String(n.maxAttendPoin),
       notes: n.notes 
     }); 
     setMenuOpen(null); 
@@ -176,10 +176,10 @@ export default function NilaiPage() {
         classId: form.classId,
         year: parseInt(yearStr),
         month: parseInt(monthStr),
-        taskAvg: form.taskAvg,
-        attitudeAvg: form.attitudeAvg,
-        attendancePoin: form.attendancePoin,
-        maxAttendPoin: form.maxAttendPoin,
+        taskAvg: Number(form.taskAvg) || 0,
+        attitudeAvg: Number(form.attitudeAvg) || 0,
+        attendancePoin: Number(form.attendancePoin) || 0,
+        maxAttendPoin: Number(form.maxAttendPoin) || 100,
         notes: form.notes
       }
 
@@ -388,22 +388,22 @@ export default function NilaiPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Akademik / Tugas (0–100)</label>
-                  <input id="input-akademik-nilai" type="number" min={0} max={100} value={form.taskAvg} onChange={e => setForm({ ...form, taskAvg: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <input id="input-akademik-nilai" type="number" min={0} max={100} value={form.taskAvg} onChange={e => setForm({ ...form, taskAvg: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Akhlak (0–100)</label>
-                  <input id="input-akhlak-nilai" type="number" min={0} max={100} value={form.attitudeAvg} onChange={e => setForm({ ...form, attitudeAvg: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <input id="input-akhlak-nilai" type="number" min={0} max={100} value={form.attitudeAvg} onChange={e => setForm({ ...form, attitudeAvg: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Kehadiran ({`Max: ${form.maxAttendPoin}`})</label>
-                  <input id="input-kehadiran-nilai" type="number" min={0} max={form.maxAttendPoin} value={form.attendancePoin} onChange={e => setForm({ ...form, attendancePoin: Number(e.target.value) })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
+                  <input id="input-kehadiran-nilai" type="number" min={0} max={Number(form.maxAttendPoin)||100} value={form.attendancePoin} onChange={e => setForm({ ...form, attendancePoin: e.target.value })} className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
               <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm flex items-center gap-2">
                 <Minus className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Rata-rata otomatis: </span>
-                <strong>{calcAvg(form.taskAvg, form.attitudeAvg, form.attendancePoin, form.maxAttendPoin)}</strong>
-                <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${predikatConfig[getPredikat(calcAvg(form.taskAvg, form.attitudeAvg, form.attendancePoin, form.maxAttendPoin))]}`}>{getPredikat(calcAvg(form.taskAvg, form.attitudeAvg, form.attendancePoin, form.maxAttendPoin))}</span>
+                <strong>{calcAvg(Number(form.taskAvg)||0, Number(form.attitudeAvg)||0, Number(form.attendancePoin)||0, Number(form.maxAttendPoin)||100)}</strong>
+                <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${predikatConfig[getPredikat(calcAvg(Number(form.taskAvg)||0, Number(form.attitudeAvg)||0, Number(form.attendancePoin)||0, Number(form.maxAttendPoin)||100))]}`}>{getPredikat(calcAvg(Number(form.taskAvg)||0, Number(form.attitudeAvg)||0, Number(form.attendancePoin)||0, Number(form.maxAttendPoin)||100))}</span>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Catatan Tambahan</label>

@@ -76,7 +76,6 @@ export default function KelasDetailPage() {
     if (kelasId) fetchDetail()
   }, [kelasId])
 
-  // Santri yang BELUM ada di kelas ini (untuk modal tambah)
   const santriInClassIds = new Set(kelas?.santriProfiles.map(s => s.userId) ?? [])
   const availableSantri = allSantri.filter(s => {
     const uid = s.userId ?? s.id
@@ -144,7 +143,6 @@ export default function KelasDetailPage() {
 
   return (
     <div className="space-y-8">
-      {/* Back + Header */}
       <div>
         <button
           onClick={() => navigate(-1)}
@@ -175,9 +173,7 @@ export default function KelasDetailPage() {
         </div>
       </div>
 
-      {/* Info Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        {/* Divisi */}
         <Card className="border-0 shadow-sm ring-1 ring-border/60">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/40">
@@ -190,7 +186,6 @@ export default function KelasDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Mentor */}
         <Card className="border-0 shadow-sm ring-1 ring-border/60 sm:col-span-1">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/40">
@@ -207,7 +202,6 @@ export default function KelasDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Jumlah Santri */}
         <Card className="border-0 shadow-sm ring-1 ring-border/60">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/40">
@@ -221,7 +215,6 @@ export default function KelasDetailPage() {
         </Card>
       </div>
 
-      {/* Santri Table */}
       <div>
         <h2 className="mb-3 text-base font-semibold">Daftar Santri di Kelas Ini</h2>
         <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden">
@@ -280,11 +273,9 @@ export default function KelasDetailPage() {
         </Card>
       </div>
 
-      {/* Modal Tambah Santri */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setModalOpen(false)}>
           <div className="relative w-full max-w-lg rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 pb-4 border-b">
               <div>
                 <h2 className="text-lg font-bold">Tambah Santri ke Kelas</h2>
@@ -295,7 +286,6 @@ export default function KelasDetailPage() {
               </button>
             </div>
 
-            {/* Search */}
             <div className="px-6 py-3 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -310,7 +300,6 @@ export default function KelasDetailPage() {
               </div>
             </div>
 
-            {/* Santri List */}
             <div className="overflow-y-auto flex-1 p-2">
               {filteredAvailable.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground text-sm">
@@ -351,7 +340,6 @@ export default function KelasDetailPage() {
         </div>
       )}
 
-      {/* Confirm Remove Modal */}
       {deleteConfirm !== null && (() => {
         const target = kelas.santriProfiles.find(s => s.id === deleteConfirm)
         const name = target?.user?.fullName ?? "santri ini"

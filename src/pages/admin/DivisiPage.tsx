@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useNavigate } from "react-router-dom"
 import api from "@/services/api"
 
 interface Divisi {
@@ -30,6 +31,7 @@ interface Divisi {
 const emptyForm: Omit<Divisi, "id" | "jumlahKelas"> = { nama: "", kode: "", deskripsi: "", status: "aktif" }
 
 export default function DivisiPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Divisi[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -188,7 +190,11 @@ export default function DivisiPage() {
               {!loading && filtered.length === 0 ? (
                 <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><Layers className="mx-auto mb-2 h-8 w-8 opacity-30" />Tidak ada divisi ditemukan.</td></tr>
               ) : filtered.map((d, idx) => (
-                <tr key={d.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
+                <tr
+                  key={d.id}
+                  onClick={() => navigate(`/dashboard/divisi/${d.id}`)}
+                  className="border-b last:border-0 transition-colors hover:bg-muted/50 cursor-pointer"
+                >
                   <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="font-medium">{d.nama}</div>
@@ -204,7 +210,7 @@ export default function DivisiPage() {
                       : <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"><XCircle className="h-3 w-3" />Non-Aktif</span>
                     }
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <div className="relative inline-block">
                       <button id={`menu-divisi-${d.id}`} onClick={() => setMenuOpen(menuOpen === d.id ? null : d.id)} className="rounded-md p-1.5 transition hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
                       {menuOpen === d.id && (

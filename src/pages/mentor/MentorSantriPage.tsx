@@ -19,7 +19,6 @@ export default function MentorSantriPage() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    // Read query param kelasId if coming from kelas page
     const params = new URLSearchParams(window.location.search)
     const kelasId = params.get("kelasId")
     if (kelasId) setSelectedKelasId(kelasId)
@@ -49,7 +48,6 @@ export default function MentorSantriPage() {
     fetchAll()
   }, [mentorId])
 
-  // Filter santri based on selected kelas
   const myKelasIds = myClasses.map((k: any) => k.id)
   const filtered = santriList.filter((s: any) => {
     const inMyClass = myKelasIds.includes(s.classId) || myKelasIds.includes(s.class?.id)
@@ -70,7 +68,6 @@ export default function MentorSantriPage() {
         <p className="text-sm text-muted-foreground">Daftar santri di kelas yang Anda ampu.</p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
