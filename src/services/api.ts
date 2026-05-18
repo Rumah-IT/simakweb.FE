@@ -59,6 +59,8 @@ export const SantriAPI = {
   getById: (id: string) => fetchWrapper(`/user-profile/${id}`),
   create: (data: any) => fetchWrapper('/user-profile', { method: 'POST', body: data instanceof FormData ? data : JSON.stringify(data), headers: data instanceof FormData ? {} : undefined }),
   update: (id: string, data: any) => fetchWrapper(`/user-profile/${id}`, { method: 'PUT', body: data instanceof FormData ? data : JSON.stringify(data), headers: data instanceof FormData ? {} : undefined }),
+  assignToClass: (santriProfileId: string, classId: string) => fetchWrapper(`/user-profile/${santriProfileId}`, { method: 'PUT', body: JSON.stringify({ classId }) }),
+  removeFromClass: (santriProfileId: string) => fetchWrapper(`/user-profile/${santriProfileId}`, { method: 'PUT', body: JSON.stringify({ classId: null }) }),
   delete: (id: string) => fetchWrapper(`/user-profile/${id}`, { method: 'DELETE' }),
 };
 
