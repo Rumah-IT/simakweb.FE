@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Link } from "react-router-dom"
 import api from "@/services/api"
 
 interface Kelas {
@@ -230,7 +231,14 @@ export default function KelasPage() {
                 return (
                   <tr key={k.id} className="border-b last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
-                    <td className="px-4 py-3 font-medium">{k.nama}</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/dashboard/kelas/${k.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {k.nama}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{k.divisi}</td>
                     <td className="px-4 py-3">{k.pengajar}</td>
                     <td className="px-4 py-3">

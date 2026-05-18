@@ -248,7 +248,7 @@ setRecentActivities([
           <Card className="border-0 shadow-sm ring-1 ring-border/60">
             <CardContent className="p-4">
               <ul className="space-y-4">
-                {recentActivities.map((activity, i) => (
+                {recentActivities.map((activity,) => (
                   <li key={activity.id} className="flex items-start gap-3">
                     <div className="mt-0.5 shrink-0">
                       {statusIcon[activity.status as keyof typeof statusIcon]}
@@ -259,9 +259,7 @@ setRecentActivities([
                         {activity.time}
                       </p>
                     </div>
-                    {i < recentActivities.length - 1 && (
-                      <div className="absolute left-[1.625rem] mt-5 h-full w-px bg-border" />
-                    )}
+                    
                   </li>
                 ))}
                 {loading && (
