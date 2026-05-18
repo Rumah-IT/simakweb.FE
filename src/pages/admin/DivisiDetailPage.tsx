@@ -122,7 +122,6 @@ export default function DivisiDetailPage() {
 
   return (
     <div className="space-y-8">
-      {/* Back + Header */}
       <div>
         <button
           onClick={() => navigate(-1)}
@@ -154,7 +153,6 @@ export default function DivisiDetailPage() {
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="border-0 shadow-sm ring-1 ring-border/60">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
@@ -182,7 +180,6 @@ export default function DivisiDetailPage() {
         </Card>
       </div>
 
-      {/* Daftar Kelas */}
       <div>
         <h2 className="mb-3 text-base font-semibold">Daftar Kelas</h2>
         {classes.length === 0 ? (
@@ -228,7 +225,6 @@ export default function DivisiDetailPage() {
         )}
       </div>
 
-      {/* Modal Tambah Kelas */}
       {addModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
