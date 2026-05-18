@@ -66,7 +66,6 @@ export default function RelasiPage() {
         nama: w.fullName
       })))
 
-      // Fetch relasi data (endpoint may require backend fix for full functionality)
       try {
         const resRelasi = await api.RelasiAPI.getAll()
         const relArray = Array.isArray(resRelasi.data) ? resRelasi.data : (resRelasi.data?.data || [])
@@ -83,7 +82,6 @@ export default function RelasiPage() {
         }))
         setData(mapped)
       } catch {
-        // Relasi endpoint may be unauthorized on backend — show empty list
         setData([])
       }
 

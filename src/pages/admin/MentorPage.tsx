@@ -134,7 +134,7 @@ export default function MentorPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
@@ -145,7 +145,6 @@ export default function MentorPage() {
         </p>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid gap-4 grid-cols-2">
         {[
           { label: "Total Mentor", value: loading ? "..." : data.length, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/40" },
@@ -165,7 +164,6 @@ export default function MentorPage() {
         ))}
       </div>
 
-      {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -188,7 +186,6 @@ export default function MentorPage() {
         </button>
       </div>
 
-      {/* Table */}
       <Card className="border-0 shadow-sm ring-1 ring-border/60 overflow-hidden relative min-h-[300px]">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
@@ -277,7 +274,6 @@ export default function MentorPage() {
         </div>
       </Card>
 
-      {/* Add/Edit Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
           <div className="relative w-full max-w-md rounded-2xl bg-background shadow-2xl ring-1 ring-border/60 p-6" onClick={e => e.stopPropagation()}>
@@ -367,7 +363,6 @@ export default function MentorPage() {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
       {deleteConfirm !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-2xl ring-1 ring-border/60" onClick={e => e.stopPropagation()}>

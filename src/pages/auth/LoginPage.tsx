@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AuthCarousel } from "@/components/AuthCarousel"
-// @ts-ignore
 import Silk from "@/components/Silk"
 
 export default function LoginPage() {
@@ -62,7 +61,6 @@ export default function LoginPage() {
           rotation={0}
         />
       </div>
-      {/* Login card */}
       <div className="relative z-10 w-full max-w-sm md:max-w-4xl">
         <LoginForm
           email={email}

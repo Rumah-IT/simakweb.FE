@@ -22,7 +22,6 @@ export default function MentorKelasPage() {
         setLoading(true)
         const res = await ClassAPI.getAll()
         const arr = Array.isArray(res?.data) ? res.data : (res?.data?.data ?? [])
-        // Filter hanya kelas yang mentorId-nya sesuai dengan user yang login
         const myClasses = arr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
         setClasses(myClasses)
         setError("")

@@ -26,6 +26,7 @@ import WaliPage from './pages/admin/WaliPage'
 import RelasiPage from './pages/admin/RelasiPage'
 import MentorPage from './pages/admin/MentorPage'
 import KelasDetailPage from './pages/admin/KelasDetailPage'
+import DivisiDetailPage from './pages/admin/DivisiDetailPage'
 
 import SantriLayout from './pages/santri/SantriLayout'
 import SantriDashboardPage from './pages/santri/SantriDashboardPage'
@@ -78,6 +79,7 @@ function App() {
           <Route path="santri/:santriId/wali-profile" element={<WaliProfilePage />} />
           <Route path="mentor" element={<MentorPage />} />
           <Route path="divisi" element={<DivisiPage />} />
+          <Route path="divisi/:divisiId" element={<DivisiDetailPage />} />
           <Route path="kelas" element={<KelasPage />} />
           <Route path="kelas/:kelasId" element={<KelasDetailPage />} />
 

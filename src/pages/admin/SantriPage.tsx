@@ -67,7 +67,6 @@ export default function SantriPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Wali relation modal state
   const [waliModalSantri, setWaliModalSantri] = useState<Santri | null>(null)
   const [waliList, setWaliList] = useState<{id: string, nama: string}[]>([])
   const [relasiList, setRelasiList] = useState<any[]>([])
