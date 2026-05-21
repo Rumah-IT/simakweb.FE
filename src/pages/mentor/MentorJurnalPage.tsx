@@ -7,6 +7,14 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 export default function MentorJurnalPage() {
   const user = loadUser()
   const mentorId: string = user.id ?? ""
@@ -25,7 +33,7 @@ export default function MentorJurnalPage() {
           DailyJournalAPI.getAll(),
         ])
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-        const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+        const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
         const ids = myKelas.map((k: any) => k.id)
 
         const jArr = Array.isArray(resJurnal?.data) ? resJurnal.data : (resJurnal?.data?.data ?? [])

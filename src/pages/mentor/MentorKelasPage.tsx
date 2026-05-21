@@ -8,6 +8,15 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+// Cek semua kemungkinan field ID dari backend
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 export default function MentorKelasPage() {
   const user = loadUser()
   const mentorId: string = user.id ?? ""
@@ -22,7 +31,7 @@ export default function MentorKelasPage() {
         setLoading(true)
         const res = await ClassAPI.getAll()
         const arr = Array.isArray(res?.data) ? res.data : (res?.data?.data ?? [])
-        const myClasses = arr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+        const myClasses = arr.filter((c: any) => isMentorClass(c, mentorId))
         setClasses(myClasses)
         setError("")
       } catch (err: any) {

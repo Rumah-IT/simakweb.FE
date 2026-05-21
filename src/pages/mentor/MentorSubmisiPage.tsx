@@ -11,6 +11,14 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 interface Submission {
   id: string
   santriName: string
@@ -46,14 +54,14 @@ export default function MentorSubmisiPage() {
         SubmissionAPI.getAll(),
       ])
       const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-      const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+      const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
       const myKelasIds = myKelas.map((k: any) => k.id)
 
       const subArr = Array.isArray(resSub?.data) ? resSub.data : (resSub?.data?.data ?? [])
       const mySubs: Submission[] = subArr
         .filter((s: any) => {
           const classId = s.assignment?.classId ?? s.classId
-          return myKelasIds.includes(classId) || s.assignment?.mentorId === mentorId
+          return myKelasIds.includes(classId) || (s.assignment && isMentorClass(s.assignment, mentorId))
         })
         .map((s: any) => ({
           id: s.id,

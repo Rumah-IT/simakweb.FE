@@ -11,6 +11,7 @@ function loadUser() {
 export default function MentorDashboardPage() {
   const user = loadUser()
   const mentorId: string = user.id ?? ""
+  const mentorUserId: string = user.userId ?? user.id ?? ""
   const displayName: string = user.name ?? user.fullName ?? "Mentor"
 
   const [stats, setStats] = useState({
@@ -36,7 +37,24 @@ export default function MentorDashboardPage() {
         ])
 
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-        const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+        
+        // Debug: log struktur kelas dari backend untuk melihat field yang tersedia
+        if (kelasArr.length > 0) {
+          console.log("[Dashboard] Contoh data kelas dari backend:", kelasArr[0])
+          console.log("[Dashboard] mentorId dari localStorage:", mentorId)
+          console.log("[Dashboard] userId dari localStorage:", mentorUserId)
+        }
+        
+        // Cocokkan dengan semua kemungkinan field ID yang dikembalikan backend
+        const myKelas = kelasArr.filter((c: any) =>
+          c.mentorId === mentorId ||
+          c.mentorId === mentorUserId ||
+          c.mentor?.id === mentorId ||
+          c.mentor?.id === mentorUserId ||
+          c.mentor?.userId === mentorId ||
+          c.mentor?.userId === mentorUserId
+        )
+        console.log("[Dashboard] Kelas yang ditemukan untuk mentor:", myKelas.length)
         setMyClasses(myKelas)
         const myIds = myKelas.map((k: any) => k.id)
 
