@@ -56,9 +56,9 @@ export default function MentorNilaiPage() {
     try {
       setLoading(true)
       const [resKelas, resNilai, resSantri] = await Promise.all([
-        ClassAPI.getAll(),
-        ScoreAPI.getAll(),
-        SantriAPI.getAll(),
+        ClassAPI.getAll().catch(() => null),
+        ScoreAPI.getAll().catch(() => null),
+        SantriAPI.getAll().catch(() => null),
       ])
       const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
       const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))

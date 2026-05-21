@@ -50,8 +50,8 @@ export default function MentorSubmisiPage() {
     try {
       setLoading(true)
       const [resKelas, resSub] = await Promise.all([
-        ClassAPI.getAll(),
-        SubmissionAPI.getAll(),
+        ClassAPI.getAll().catch(() => null),
+        SubmissionAPI.getAll().catch(() => null),
       ])
       const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
       const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))

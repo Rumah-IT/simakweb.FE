@@ -8,10 +8,17 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 export default function MentorDashboardPage() {
   const user = loadUser()
   const mentorId: string = user.id ?? ""
-  const mentorUserId: string = user.userId ?? user.id ?? ""
   const displayName: string = user.name ?? user.fullName ?? "Mentor"
 
   const [stats, setStats] = useState({
@@ -29,32 +36,16 @@ export default function MentorDashboardPage() {
       try {
         setLoading(true)
         const [resKelas, resSantri, resJurnal, resNilai, resSub] = await Promise.all([
-          ClassAPI.getAll(),
-          SantriAPI.getAll(),
-          DailyJournalAPI.getAll(),
-          ScoreAPI.getAll(),
-          SubmissionAPI.getAll(),
+          ClassAPI.getAll().catch(() => null),
+          SantriAPI.getAll().catch(() => null),
+          DailyJournalAPI.getAll().catch(() => null),
+          ScoreAPI.getAll().catch(() => null),
+          SubmissionAPI.getAll().catch(() => null),
         ])
 
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
         
-        // Debug: log struktur kelas dari backend untuk melihat field yang tersedia
-        if (kelasArr.length > 0) {
-          console.log("[Dashboard] Contoh data kelas dari backend:", kelasArr[0])
-          console.log("[Dashboard] mentorId dari localStorage:", mentorId)
-          console.log("[Dashboard] userId dari localStorage:", mentorUserId)
-        }
-        
-        // Cocokkan dengan semua kemungkinan field ID yang dikembalikan backend
-        const myKelas = kelasArr.filter((c: any) =>
-          c.mentorId === mentorId ||
-          c.mentorId === mentorUserId ||
-          c.mentor?.id === mentorId ||
-          c.mentor?.id === mentorUserId ||
-          c.mentor?.userId === mentorId ||
-          c.mentor?.userId === mentorUserId
-        )
-        console.log("[Dashboard] Kelas yang ditemukan untuk mentor:", myKelas.length)
+        const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
         setMyClasses(myKelas)
         const myIds = myKelas.map((k: any) => k.id)
 
@@ -84,8 +75,8 @@ export default function MentorDashboardPage() {
           lastMonthScore: String(avgScore),
           jurnalCount: myJurnal.length,
         })
-      } catch {
-
+      } catch (err) {
+        console.error("Dashboard fetch error:", err)
       } finally {
         setLoading(false)
       }

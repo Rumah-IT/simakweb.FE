@@ -37,8 +37,8 @@ export default function MentorSantriPage() {
       try {
         setLoading(true)
         const [resKelas, resSantri] = await Promise.all([
-          ClassAPI.getAll(),
-          SantriAPI.getAll(),
+          ClassAPI.getAll().catch(() => null),
+          SantriAPI.getAll().catch(() => null),
         ])
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
         const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))

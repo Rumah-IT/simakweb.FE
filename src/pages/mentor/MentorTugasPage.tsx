@@ -64,8 +64,8 @@ export default function MentorTugasPage() {
     try {
       setLoading(true)
       const [resKelas, resAssignment] = await Promise.all([
-        ClassAPI.getAll(),
-        AssignmentAPI.getAll(),
+        ClassAPI.getAll().catch(() => null),
+        AssignmentAPI.getAll().catch(() => null),
       ])
       const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
       const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))

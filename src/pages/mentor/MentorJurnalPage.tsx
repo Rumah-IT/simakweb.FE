@@ -29,8 +29,8 @@ export default function MentorJurnalPage() {
       try {
         setLoading(true)
         const [resKelas, resJurnal] = await Promise.all([
-          ClassAPI.getAll(),
-          DailyJournalAPI.getAll(),
+          ClassAPI.getAll().catch(() => null),
+          DailyJournalAPI.getAll().catch(() => null),
         ])
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
         const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
