@@ -44,6 +44,9 @@ import MentorKelasPage from './pages/mentor/MentorKelasPage'
 import MentorSantriPage from './pages/mentor/MentorSantriPage'
 import MentorJurnalPage from './pages/mentor/MentorJurnalPage'
 import MentorNilaiPage from './pages/mentor/MentorNilaiPage'
+import MentorAbsensiPage from './pages/mentor/MentorAbsensiPage'
+import MentorTugasPage from './pages/mentor/MentorTugasPage'
+import MentorSubmisiPage from './pages/mentor/MentorSubmisiPage'
 
 function RoleRedirect() {
   try {
@@ -122,6 +125,9 @@ function App() {
           <Route path="santri" element={<MentorSantriPage />} />
           <Route path="jurnal" element={<MentorJurnalPage />} />
           <Route path="nilai" element={<MentorNilaiPage />} />
+          <Route path="absensi" element={<MentorAbsensiPage />} />
+          <Route path="tugas" element={<MentorTugasPage />} />
+          <Route path="submisi" element={<MentorSubmisiPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>
