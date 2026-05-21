@@ -57,9 +57,9 @@ export default function MentorAbsensiPage() {
       try {
         setLoading(true)
         const [resKelas, resSantri, resAbsensi] = await Promise.all([
-          ClassAPI.getAll(),
-          SantriAPI.getAll(),
-          AttendanceAPI.getAll(),
+          ClassAPI.getAll().catch(() => null),
+          SantriAPI.getAll().catch(() => null),
+          AttendanceAPI.getAll().catch(() => null),
         ])
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
         const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
