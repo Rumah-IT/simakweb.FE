@@ -19,7 +19,6 @@ function isMentorClass(c: any, userId: string) {
 export default function MentorDashboardPage() {
   const user = loadUser()
   const mentorId: string = user.id ?? ""
-  const mentorUserId: string = user.userId ?? user.id ?? ""
   const displayName: string = user.name ?? user.fullName ?? "Mentor"
 
   const [stats, setStats] = useState({
@@ -47,6 +46,7 @@ export default function MentorDashboardPage() {
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
         
         const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
+        setMyClasses(myKelas)
         const myIds = myKelas.map((k: any) => k.id)
 
         const santriArr = Array.isArray(resSantri?.data) ? resSantri.data : (resSantri?.data?.data ?? [])
