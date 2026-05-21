@@ -11,6 +11,14 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 type AttendanceStatus = "HADIR" | "SAKIT" | "IZIN" | "ALFA"
 
 interface SantriRow {
@@ -54,7 +62,7 @@ export default function MentorAbsensiPage() {
           AttendanceAPI.getAll(),
         ])
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-        const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+        const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
         setMyClasses(myKelas)
         if (myKelas.length > 0 && !selectedKelasId) setSelectedKelasId(myKelas[0].id)
 

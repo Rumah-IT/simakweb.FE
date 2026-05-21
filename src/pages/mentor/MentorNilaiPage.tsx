@@ -11,6 +11,14 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 const MONTHS = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -53,7 +61,7 @@ export default function MentorNilaiPage() {
         SantriAPI.getAll(),
       ])
       const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-      const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+      const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
       setMyClasses(myKelas)
       const myIds = myKelas.map((k: any) => k.id)
 

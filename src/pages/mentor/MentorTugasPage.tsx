@@ -12,6 +12,14 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
+function isMentorClass(c: any, userId: string) {
+  return (
+    c.mentorId === userId ||
+    c.mentor?.id === userId ||
+    c.mentor?.userId === userId
+  )
+}
+
 type SubmissionType = "TEXT" | "FILE"
 
 interface Assignment {
@@ -60,13 +68,13 @@ export default function MentorTugasPage() {
         AssignmentAPI.getAll(),
       ])
       const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-      const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId || c.mentor?.id === mentorId)
+      const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
       setMyClasses(myKelas)
 
       const aArr = Array.isArray(resAssignment?.data) ? resAssignment.data : (resAssignment?.data?.data ?? [])
       const myIds = myKelas.map((k: any) => k.id)
       const myAssignments: Assignment[] = aArr
-        .filter((a: any) => myIds.includes(a.classId) || myIds.includes(a.class?.id) || a.mentorId === mentorId || a.mentor?.id === mentorId)
+        .filter((a: any) => myIds.includes(a.classId) || myIds.includes(a.class?.id) || isMentorClass(a, mentorId))
         .map((a: any) => ({
           id: a.id,
           title: a.title,
