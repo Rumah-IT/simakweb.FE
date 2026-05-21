@@ -9,6 +9,9 @@ import {
   LogOut,
   ChevronRight,
   UserCircle,
+  CalendarCheck,
+  ClipboardList,
+  Send,
 } from "lucide-react"
 
 import {
@@ -44,8 +47,11 @@ const navMentor = [
     items: [
       { title: "Kelas Saya", url: "/mentor/kelas", icon: GraduationCap },
       { title: "Santri Bimbingan", url: "/mentor/santri", icon: Users },
+      { title: "Absensi", url: "/mentor/absensi", icon: CalendarCheck },
+      { title: "Tugas", url: "/mentor/tugas", icon: ClipboardList },
+      { title: "Penilaian Submisi", url: "/mentor/submisi", icon: Send },
       { title: "Jurnal Santri", url: "/mentor/jurnal", icon: BookOpenCheck },
-      { title: "Nilai Santri", url: "/mentor/nilai", icon: BarChart3 },
+      { title: "Nilai Bulanan", url: "/mentor/nilai", icon: BarChart3 },
     ],
   },
 ]
