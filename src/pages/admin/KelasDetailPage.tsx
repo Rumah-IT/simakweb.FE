@@ -93,9 +93,10 @@ export default function KelasDetailPage() {
 
   const handleAssign = async (santri: AllSantri) => {
     const profileId = santri.id
+    const userId = santri.userId || santri.id
     setAssigning(profileId)
     try {
-      await ClassAPI.assignSantri(kelasId!, profileId)
+      await ClassAPI.assignSantri(kelasId!, userId)
       toast.success(`${santri.user?.fullName ?? "Santri"} berhasil ditambahkan ke kelas.`)
       setModalOpen(false)
       setSearchModal("")
