@@ -8,7 +8,6 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
-// Cek semua kemungkinan field ID dari backend
 function isMentorClass(c: any, userId: string) {
   return (
     c.mentorId === userId ||

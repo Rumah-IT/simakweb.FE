@@ -95,7 +95,7 @@ export default function KelasDetailPage() {
     const profileId = santri.id
     setAssigning(profileId)
     try {
-      await SantriAPI.assignToClass(profileId, kelasId!)
+      await ClassAPI.assignSantri(kelasId!, profileId)
       toast.success(`${santri.user?.fullName ?? "Santri"} berhasil ditambahkan ke kelas.`)
       setModalOpen(false)
       setSearchModal("")
@@ -110,7 +110,7 @@ export default function KelasDetailPage() {
   const handleRemove = async (profileId: string, name: string) => {
     setRemoving(profileId)
     try {
-      await SantriAPI.removeFromClass(profileId)
+      await ClassAPI.removeSantri(profileId)
       toast.success(`${name} berhasil dikeluarkan dari kelas.`)
       setDeleteConfirm(null)
       fetchDetail()

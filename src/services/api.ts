@@ -94,6 +94,8 @@ export const ClassAPI = {
   create: (data: any) => fetchWrapper('/classes', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => fetchWrapper(`/classes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => fetchWrapper(`/classes/${id}`, { method: 'DELETE' }),
+  assignSantri: (classId: string, santriProfileId: string) => fetchWrapper('/classes/assign-santri', { method: 'POST', body: JSON.stringify({ classId, santriProfileId }) }),
+  removeSantri: (santriProfileId: string) => fetchWrapper(`/user-profile/${santriProfileId}`, { method: 'PUT', body: JSON.stringify({ classId: null }) }),
 };
 
 export const AttendanceAPI = {
