@@ -8,13 +8,8 @@ function loadUser() {
   try { return JSON.parse(localStorage.getItem("user") ?? "{}") } catch { return {} }
 }
 
-function isMentorClass(c: any, userId: string) {
-  return (
-    c.mentorId === userId ||
-    c.mentor?.id === userId ||
-    c.mentor?.userId === userId
-  )
-}
+
+
 
 export default function MentorDashboardPage() {
   const user = loadUser()
@@ -44,8 +39,7 @@ export default function MentorDashboardPage() {
         ])
 
         const kelasArr = Array.isArray(resKelas?.data) ? resKelas.data : (resKelas?.data?.data ?? [])
-        
-        const myKelas = kelasArr.filter((c: any) => isMentorClass(c, mentorId))
+        const myKelas = kelasArr.filter((c: any) => c.mentorId === mentorId)
         setMyClasses(myKelas)
         const myIds = myKelas.map((k: any) => k.id)
 
