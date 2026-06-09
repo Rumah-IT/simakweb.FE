@@ -37,6 +37,7 @@ import SantriJurnalPage from './pages/santri/SantriJurnalPage'
 
 import WaliLayout from './pages/wali/WaliLayout'
 import WaliDashboardPage from './pages/wali/WaliDashboardPage'
+import WaliSantriDetailPage from './pages/wali/WaliSantriDetailPage'
 
 import MentorLayout from './pages/mentor/MentorLayout'
 import MentorDashboardPage from './pages/mentor/MentorDashboardPage'
@@ -114,6 +115,7 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={["WALI_SANTRI", "WALI"]} />}>
         <Route path="/wali" element={<WaliLayout />}>
           <Route index element={<WaliDashboardPage />} />
+          <Route path="santri/:id" element={<WaliSantriDetailPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Route>

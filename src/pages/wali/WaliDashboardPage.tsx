@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { RelasiAPI } from "@/services/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Users, GraduationCap } from "lucide-react"
 
 export default function WaliDashboardPage() {
+  const navigate = useNavigate()
   const [relasi, setRelasi] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
@@ -60,7 +62,11 @@ export default function WaliDashboardPage() {
         ) : (
                     <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
             {relasi.map((r) => (
-              <Card key={r.id} className="overflow-hidden">
+              <Card 
+                key={r.id} 
+                className="overflow-hidden cursor-pointer hover:border-primary transition-colors"
+                onClick={() => navigate(`/wali/santri/${r.santri?.id}`)}
+              >
                 <div className="bg-primary/10 p-4 flex justify-center items-center">
                   <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-md">
                     <GraduationCap className="h-10 w-10" />
