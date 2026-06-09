@@ -66,7 +66,7 @@ export function WaliSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="h-16 border-b border-sidebar-border flex items-center justify-center px-4">
+      <SidebarHeader className="h-16 border-b border-sidebar-border px-4">
         <div className="flex items-center gap-3 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md">
             <Users className="h-5 w-5" />
