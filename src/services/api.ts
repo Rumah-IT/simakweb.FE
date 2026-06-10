@@ -2,17 +2,6 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://simakweb-be.onrender.com/api/v1';
 const getAuthToken = () => localStorage.getItem('token') || '';
 
-/** Hapus semua data sesi dan arahkan ke halaman login */
-const handleUnauthorized = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('user');
-  // Hindari redirect loop jika sudah di halaman login
-  if (!window.location.pathname.startsWith('/login')) {
-    window.location.href = '/login';
-  }
-};
-
 const fetchWrapper = async (endpoint: string, options: RequestInit = {}) => {
   const token = getAuthToken();
   const headers: Record<string, string> = {
@@ -35,10 +24,6 @@ const fetchWrapper = async (endpoint: string, options: RequestInit = {}) => {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      // Jika token expired / tidak valid → logout otomatis
-      if (response.status === 401) {
-        handleUnauthorized();
-      }
       throw {
         status: response.status,
         message: data?.message || `API Request Failed: ${response.statusText}`,
